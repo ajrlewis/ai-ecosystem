@@ -8,3 +8,8 @@ contract. It names every stable identity and references the reviewable UTF-8 Mar
 The text-only Skills are example content and are not production defaults or currently
 inserted by `brain-seed-northstar`. Binary assets are intentionally deferred until Brain has
 an explicit asset storage and delivery contract.
+
+The bundle also seeds three fictional human authorization profiles: Alex belongs to the
+investment team, Morgan belongs to portfolio operations, and Taylor has no group memberships.
+These are principals and group claims for access-control testing, not password-bearing users or
+roles.
