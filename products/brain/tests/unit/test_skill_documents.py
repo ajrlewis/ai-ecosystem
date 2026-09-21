@@ -1,5 +1,6 @@
 from pathlib import Path
 from shutil import copytree
+from typing import cast
 
 import pytest
 import yaml
@@ -114,6 +115,15 @@ def test_northstar_bundle_resolves_reviewable_text_and_rejects_bad_references(
     assert len(bundle.documents) == 6
     assert "£42m" in bundle.documents["documents/portfolio/orion-investment-memo.md"]
     assert "superseded" in bundle.documents["documents/portfolio/orion-operating-update.md"]
+    principals = cast(list[dict[str, object]], bundle.manifest["principals"])
+    memberships = cast(list[dict[str, object]], bundle.manifest["memberships"])
+    assert {
+        principal["external_subject"] for principal in principals if principal["kind"] == "user"
+    } == {"northstar-alex", "northstar-morgan", "northstar-taylor", "harbour-user"}
+    assert {membership["principal"] for membership in memberships} >= {
+        "principal:alex",
+        "principal:morgan",
+    }
 
     source = Path(__file__).resolve().parents[2] / "examples" / "northstar"
     broken = tmp_path / "northstar"

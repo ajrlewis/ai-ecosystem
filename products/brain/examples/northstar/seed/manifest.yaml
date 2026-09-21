@@ -13,6 +13,16 @@ principals:
     kind: user
     external_subject: northstar-alex
     display_name: Alex Rowan
+  - key: principal:morgan
+    organization: organization:northstar
+    kind: user
+    external_subject: northstar-morgan
+    display_name: Morgan Lee
+  - key: principal:taylor
+    organization: organization:northstar
+    kind: user
+    external_subject: northstar-taylor
+    display_name: Taylor Quinn
   - key: principal:cortex
     organization: organization:northstar
     kind: agent
@@ -36,6 +46,9 @@ memberships:
   - organization: organization:northstar
     group: group:investment
     principal: principal:alex
+  - organization: organization:northstar
+    group: group:operations
+    principal: principal:morgan
   - organization: organization:northstar
     group: group:operations
     principal: principal:cortex
