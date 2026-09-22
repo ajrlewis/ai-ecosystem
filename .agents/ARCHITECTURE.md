@@ -25,9 +25,11 @@ each current PageVersion through Brain's public read API, and invokes the provid
 once with bounded, explicitly untrusted Page context. It returns a transient answer with ordered,
 server-selected PageVersion references and visible provenance; empty or changed lookup does not
 invoke the model. The Knowledge web view renders it as escaped text.
-Lookup and answer state remain outside canonical conversation turns. The local
-single-owner Cortex credential uses one configured Brain authorization identity; per-user
-Brain identity propagation is not implemented.
+Lookup and answer state remain outside canonical conversation turns. The development-only
+multi-user adapter validates signed provider-neutral local claims. Cortex uses the stable subject
+for conversation ownership and propagates the validated identity through its Brain HTTP client,
+preserving each user's Brain principal and group claims. Opaque local bearers remain an explicit
+compatibility path for MCP and non-browser tests.
 The provider-neutral `cortex-ai` package defines immutable
 single-turn chat contracts, controlled model errors, an async non-streaming protocol, and a
 deterministic synthetic implementation plus a bounded, no-retry OpenAI Responses API adapter.
@@ -48,12 +50,12 @@ matches the accumulated deltas before publication. Its structured operational lo
 start/safe outcome, duration, and emitted character count. Compose service DNS uses explicit
 `brain-*` and `cortex-*` ownership names without fixed container names.
 
-The Cortex web application uses a separate signed HTTP-only local session and server-only Cortex
-API bearer. Server Components and actions call the public conversation and lookup HTTP contracts
+The Cortex web application uses a signed HTTP-only local claims session and server-only Cortex API
+bearer. Server Components and actions call the public conversation and lookup HTTP contracts
 through generated OpenAPI Zod validation. The browser can create, list, reopen, and append turns
 without optimistic durable messages or direct backend access. A separate read-only evidence view
-shows lookup results as escaped text outside conversation history. Brain credentials, identity,
-APIs, and sessions are not used by Cortex web.
+shows lookup results as escaped text outside conversation history. Cortex propagates the validated
+provider-neutral local identity to Brain server-side; credentials never reach the browser.
 
 ## Brain Purpose And Boundary
 

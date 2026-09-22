@@ -8,6 +8,8 @@ import {
   LookupResponse,
 } from "./generated/api";
 import { env } from "./env";
+import { cookies } from "next/headers";
+import { sessionCookie } from "./session";
 
 export type ApiErrorKind =
   | "unauthorized"
@@ -37,6 +39,8 @@ async function request<T>(
   init: RequestInit = {},
 ): Promise<T> {
   const config = env();
+  let assertion: string | undefined;
+  try { assertion = (await cookies()).get(sessionCookie)?.value; } catch {}
   let response: Response;
   try {
     response = await fetch(`${config.CORTEX_API_URL}${path}`, {
@@ -44,6 +48,7 @@ async function request<T>(
       headers: {
         ...init.headers,
         Authorization: `Bearer ${config.CORTEX_API_BEARER_TOKEN}`,
+        ...(assertion ? { "X-Mind-Local-Identity": assertion } : {}),
       },
       cache: "no-store",
       signal: AbortSignal.timeout(35_000),

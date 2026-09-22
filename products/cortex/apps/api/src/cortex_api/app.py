@@ -163,8 +163,23 @@ def create_app(
         else None
     )
 
-    def caller(authorization: Annotated[str | None, Header()] = None) -> CallerIdentity:
+    def caller(
+        authorization: Annotated[str | None, Header()] = None,
+        x_mind_local_identity: Annotated[
+            str | None, Header(include_in_schema=False)
+        ] = None,
+    ) -> CallerIdentity:
         try:
+            secret = (
+                resolved_settings.local_identity_secret.get_secret_value()
+                if resolved_settings.local_identity_secret is not None
+                else None
+            )
+            asserted = authenticator.authenticate_assertion(x_mind_local_identity, secret)
+            if asserted is not None:
+                if "cortex.api" not in asserted.scopes or "conversation.user" not in asserted.roles:
+                    raise HTTPException(status_code=403, detail="insufficient_permissions")
+                return asserted
             return authenticator.authenticate(authorization)
         except AuthenticationError:
             raise HTTPException(status_code=401, detail="unauthorized") from None
@@ -365,12 +380,12 @@ def create_app(
     @app.post("/knowledge/lookup", response_model=LookupResponse, tags=["knowledge"])
     async def lookup_knowledge(
         lookup: LookupRequest,
-        _: Annotated[CallerIdentity, Depends(caller)],
+        identity: Annotated[CallerIdentity, Depends(caller)],
     ) -> LookupResponse | JSONResponse:
         if lookup_service is None:
             return JSONResponse(status_code=503, content={"error": "brain_disabled"})
         try:
-            return await lookup_service.lookup(lookup.query)
+            return await lookup_service.lookup(lookup.query, identity_assertion=identity.assertion)
         except KnowledgeChanged:
             return JSONResponse(status_code=409, content={"error": "knowledge_changed"})
         except BrainRejectedCredentials:
@@ -385,12 +400,12 @@ def create_app(
     @app.post("/knowledge/answer", response_model=AnswerResponse, tags=["knowledge"])
     async def answer_knowledge(
         request: LookupRequest,
-        _: Annotated[CallerIdentity, Depends(caller)],
+        identity: Annotated[CallerIdentity, Depends(caller)],
     ) -> AnswerResponse | JSONResponse:
         if answer_service is None:
             return JSONResponse(status_code=503, content={"error": "brain_disabled"})
         try:
-            return await answer_service.answer(request.query)
+            return await answer_service.answer(request.query, identity_assertion=identity.assertion)
         except KnowledgeChanged:
             return JSONResponse(status_code=409, content={"error": "knowledge_changed"})
         except BrainRejectedCredentials:

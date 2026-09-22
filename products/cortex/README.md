@@ -29,12 +29,12 @@ unexpected-failure states are explicit and safe.
 The browser talks only to Next.js Server Components, route handlers, and server actions. Those
 server-only modules call Cortex's public create/list/get/append HTTP API using checked-in Zod
 validators generated from FastAPI OpenAPI. Requests are bounded, uncached, and never retry. The
-API bearer, local password, and signed-session secret are never placed in client code or cookies;
-the cookie contains only a signed opaque authentication marker and is HTTP-only, same-site lax, and secure when
+API bearer, local password, and signing secret are never placed in client code or cookies; the
+cookie contains only minimum signed local claims and is HTTP-only, same-site lax, and secure when
 served through HTTPS.
 
-Host development uses `CORTEX_API_URL`, `CORTEX_API_BEARER_TOKEN`, `CORTEX_WEB_USER`,
-`CORTEX_WEB_PASSWORD`, and `CORTEX_WEB_SESSION_SECRET`. Compose sets the API URL to the internal
+Host development uses `CORTEX_API_URL`, `CORTEX_API_BEARER_TOKEN`, `LOCAL_USERS`, and
+`LOCAL_IDENTITY_SECRET`. Compose sets the API URL to the internal
 `cortex-api` service while browsers use the published Cortex web port. These names and the
 `cortex-session` cookie are separate from Brain. This is development authentication only;
 production SSO, provisioning, roles, password management, shared Brain sessions,
@@ -44,8 +44,9 @@ automatic titles, retries, and optimistic messages remain deferred.
 
 Cortex owns a separate PostgreSQL database named `cortex`, Cortex-only SQLAlchemy metadata, and
 an explicit Alembic lifecycle. Applications never migrate at startup. All `/conversations`
-operations require the configured local bearer token, which maps server-side to one opaque owner;
-identity is never accepted from requests. Missing and invalid credentials return the same safe
+operations accept a validated signed local identity with `cortex.api` scope and
+`conversation.user` role; its stable subject is the durable owner. The configured bearer remains
+for non-browser compatibility and maps to one opaque owner. Missing and invalid credentials return the same safe
 unauthorized response. Production identity remains deferred.
 
 The API creates empty conversations, lists only the caller's conversations newest-first with

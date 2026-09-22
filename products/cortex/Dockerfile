@@ -23,6 +23,7 @@ COPY products/brain/apps/web/package.json products/brain/apps/web/package.json
 COPY products/cortex/apps/web/package.json products/cortex/apps/web/package.json
 RUN npm ci
 COPY products/cortex/apps/web products/cortex/apps/web
+COPY products/brain/apps/web/lib/local-users.ts products/brain/apps/web/lib/local-users.ts
 RUN npm run build:app --workspace @cortex/web
 
 FROM node:22-slim AS web

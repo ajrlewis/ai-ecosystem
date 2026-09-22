@@ -7,7 +7,10 @@ same provider-neutral value for HTTP and MCP:
 AuthContext
 ├── organization_id
 ├── principal_id
-└── group_ids
+├── group_ids
+├── subject and display_name
+├── scopes
+└── application roles
 ```
 
 Application services accept this context explicitly and enforce access before returning
@@ -16,11 +19,13 @@ service, and serialize its result.
 
 ## Initial authentication
 
-Local development uses one configured opaque bearer token. It maps to one configured
-Organization, Principal, and set of Groups. Missing, malformed, disabled, or incorrect
-credentials are denied. The token is deliberately not a production identity system and
-must be supplied through environment configuration; real secret values are never
-committed. HTTP `/health` and
+Local browser development uses configuration-backed synthetic users and integrity-protected,
+HTTP-only claim sessions. Server-side calls forward a signed local identity assertion; Brain
+requires `brain.api`, while mutations additionally require `knowledge.steward`. Cortex requires
+`cortex.api` and `conversation.user`. App roles grant operations and never replace Brain group
+claims, which continue to drive resource policies. The configured opaque bearer remains a
+compatibility path for MCP and non-browser tests and has explicit steward authority. Neither
+mechanism is a production identity system or OAuth issuer. HTTP `/health` and
 the MCP `health` tool remain unauthenticated for process health checks.
 
 The initial authenticated operation, HTTP `GET /auth/context` and MCP `auth_context`,
@@ -47,7 +52,8 @@ Thus no permitted Groups means Organization-wide access. One or more permitted G
 requires membership in at least one; membership in every group is not required. Group
 claims must be validated as belonging to the authenticated Organization. Soft-deleted or
 inactive Principals, Groups, memberships, policies, and resources do not grant access.
-There are no role hierarchies or implicit administrator bypasses.
+There are no role hierarchies or implicit administrator bypasses. Scope checks, operation-role
+checks, and resource-policy checks are distinct.
 
 ## Resource inheritance
 
@@ -87,9 +93,8 @@ authorized relation, then combine lexical and semantic scores with deterministic
 
 ## Mutations and deletion
 
-Create and update services validate that all referenced records share the caller's
-Organization. Mutation authorization will be defined per operation as those operations
-are introduced; this slice does not invent roles. Soft deletion removes records from
+Create and update services require `knowledge.steward` at the HTTP boundary and validate that all
+referenced records share the caller's Organization. Soft deletion removes records from
 normal authorization candidates. Immutable PageVersion and SkillVersion content is never
 updated in place.
 

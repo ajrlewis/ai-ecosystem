@@ -64,10 +64,8 @@ principals, and access groups; the defaults seed supplies the repository-owned S
 
 The disposable Compose credentials are:
 
-| Application | Username | Password |
-| --- | --- | --- |
-| Brain | `brain-admin` | `brain-local-dev` |
-| Cortex | `cortex-user` | `cortex-local-dev` |
+Both sign-in forms list the same synthetic users. Their disposable development password is
+`mind-local-dev`: `alex`, `morgan`, and `taylor`.
 
 Sign in to Brain to browse the seeded Pages, provenance, Skills, and search results. Sign in to
 Cortex to create a durable local conversation or query the seeded Brain knowledge through Cortex.
@@ -85,28 +83,22 @@ curl --fail \
 
 ### Seeded access profiles
 
-Brain authorization uses principals and group membership, not application roles. The local web
-username only protects the development UI; the server-side bearer maps to one configured seeded
-principal. Northstar includes these human test profiles:
+The development adapter signs provider-neutral subject, display-name, tenant, scope, app-role,
+principal, and group claims. `brain.api` and `cortex.api` grant API access;
+`knowledge.steward` permits Brain mutations and `conversation.user` permits Cortex conversation
+operations. Brain groups remain resource-policy claims, not roles. Northstar includes:
 
 | Profile | Principal ID | Groups | Access exercised |
 | --- | --- | --- | --- |
-| Alex Rowan (default) | `7f180c45-c2f9-5f9d-b715-bf68f4ced724` | Investment team (`8bde0934-4daa-5afa-a9c3-24e849557486`) | Organization-wide and investment-team content |
+| Alex Rowan (`alex`) | `7f180c45-c2f9-5f9d-b715-bf68f4ced724` | Investment team (`8bde0934-4daa-5afa-a9c3-24e849557486`) | Steward; organization-wide and investment-team content |
 | Morgan Lee | `52d13c34-a996-52f3-b4e9-33daf8b0fd72` | Portfolio operations (`ed74569a-d5ea-5cb2-a321-bbd23825d652`) | Organization-wide content; investment-team content is denied |
 | Taylor Quinn | `b6fe5b54-0d90-5c69-8824-cdb9f04f1d03` | None (`[]`) | Organization-wide content; investment-team content is denied |
 
-To test another profile, copy `.env.example` to `.env`, set `LOCAL_PRINCIPAL_ID` and
-`LOCAL_GROUP_IDS` to the values above, then recreate services that hold the Brain credential:
-
-```bash
-docker compose up -d --force-recreate brain-api brain-web cortex-api
-```
-
-The Brain sign-in username/password remain the configured `LOCAL_WEB_USER` and
-`LOCAL_WEB_PASSWORD`. This is deliberately a single-identity local authentication adapter, not a
-multi-user password store; production identity, role administration, and user switching are not
-implemented. To restore the default profile, restore Alex's IDs from `.env.example` and rerun the
-same recreate command.
+Choose a different user at either sign-in form; Compose does not need to be recreated. Signed,
+HTTP-only sessions contain claims but no passwords or backend bearers. The opaque bearer remains
+for local MCP and non-browser integration tests. This adapter is development-only and neither
+implements OAuth nor issues production tokens; Microsoft Entra remains the intended production
+identity provider.
 
 Inspect logs with `docker compose logs -f`, and stop the stack while preserving its database with
 `docker compose down`. Add `--volumes` only when you intentionally want to delete the local

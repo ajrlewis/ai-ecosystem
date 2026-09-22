@@ -21,7 +21,7 @@ export default async function ConsoleLayout({
       <a className="skip-link" href="#content">
         Skip to content
       </a>
-      <AppShell theme={name} user={user} pages={pages}>
+      <AppShell theme={name} user={user.displayName} pages={pages}>
         {children}
       </AppShell>
     </div>

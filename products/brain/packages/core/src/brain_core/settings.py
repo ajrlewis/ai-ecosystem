@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     local_organization_id: UUID = UUID("10000000-0000-0000-0000-000000000001")
     local_principal_id: UUID = UUID("20000000-0000-0000-0000-000000000001")
     local_group_ids: tuple[UUID, ...] = ()
+    local_identity_secret: SecretStr | None = None
 
 
 @lru_cache

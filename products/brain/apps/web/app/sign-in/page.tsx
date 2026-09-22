@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { readSession, sessionCookie } from "@/lib/session";
+import { publicLocalUsers } from "@/lib/local-users";
 export default async function SignIn({
   searchParams,
 }: {
@@ -9,6 +10,7 @@ export default async function SignIn({
   if (readSession((await cookies()).get(sessionCookie)?.value))
     redirect("/pages");
   const failed = (await searchParams).error;
+  const users = publicLocalUsers();
   return (
     <main className="sign-in">
       <section className="sign-in-panel">
@@ -24,7 +26,7 @@ export default async function SignIn({
         <form action="/api/auth/sign-in" method="post">
           <label>
             Username
-            <input name="username" autoComplete="username" required autoFocus />
+            <select name="username" autoComplete="username" required autoFocus>{users.map((user) => <option key={user.username} value={user.username}>{user.displayName} ({user.username})</option>)}</select>
           </label>
           <label>
             Password

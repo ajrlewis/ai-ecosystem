@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     cortex_local_owner_id: Annotated[
         str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)
     ] = "cortex-local-user"
+    local_identity_secret: SecretStr | None = None
     model_backend: Literal["deterministic", "openai"] = "deterministic"
     deterministic_stream_delay_seconds: float = Field(default=0, ge=0, le=5)
     openai_api_key: SecretStr | None = None
