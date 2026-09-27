@@ -165,9 +165,7 @@ def create_app(
 
     def caller(
         authorization: Annotated[str | None, Header()] = None,
-        x_mind_local_identity: Annotated[
-            str | None, Header(include_in_schema=False)
-        ] = None,
+        x_mind_local_identity: Annotated[str | None, Header(include_in_schema=False)] = None,
     ) -> CallerIdentity:
         try:
             secret = (
