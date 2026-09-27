@@ -1,7 +1,7 @@
 # Architecture
 
-`README.md` defines the Mind workspace. `products/brain/README.md` and
-`products/cortex/README.md` are the product specifications. Brain is the implemented knowledge
+`README.md` defines the AI Ecosystem workspace. `products/knowledge/README.md` and
+`products/agent/README.md` are the product specifications. Knowledge is the implemented knowledge
 product: a Python
 3.13 uv workspace with HTTP and MCP interfaces over shared application services, a
 provider-neutral authorization context, and PostgreSQL identity/access plus governed
@@ -9,57 +9,57 @@ knowledge and Skill persistence plus authorization-safe hybrid Page search manag
 
 ## Workspace And Product Boundary
 
-Mind is a product monorepo rooted at `products/`. Brain owns governed knowledge and Skills;
-Cortex owns agent reasoning and action. Both products remain independently deployable, and
-Cortex must integrate with Brain through Brain's public HTTP or MCP interfaces rather than its
+AI Ecosystem is a product monorepo rooted at `products/`. Knowledge owns governed knowledge and Skills;
+Agent owns agent reasoning and action. Both products remain independently deployable, and
+Agent must integrate with Knowledge through Knowledge's public HTTP or MCP interfaces rather than its
 database or internal packages. Root manifests, Compose, CI, and agent guidance coordinate the
-workspace. Cortex implements an independently runnable FastAPI health service, Next.js conversation
-application, and the responsibility-focused `cortex-brain` HTTP client package. The Cortex application
-owns the client lifecycle and uses Brain's public health and authenticated identity-context routes
+workspace. Agent implements an independently runnable FastAPI health service, Next.js conversation
+application, and the responsibility-focused `agent-knowledge` HTTP client package. The Agent application
+owns the client lifecycle and uses Knowledge's public health and authenticated identity-context routes
 through bounded requests. Its dependency diagnostic exposes safe status categories while local
-health remains dependency-free. Cortex also exposes authenticated read-only `POST /knowledge/lookup`:
-its bounded Brain client searches through public HTTP, reads the top authorized Page, checks
+health remains dependency-free. Agent also exposes authenticated read-only `POST /knowledge/lookup`:
+its bounded Knowledge client searches through public HTTP, reads the top authorized Page, checks
 the current version against the search hit, and returns Page evidence with visible provenance.
 Authenticated `POST /knowledge/answer` searches for up to three authorized Pages, validates
-each current PageVersion through Brain's public read API, and invokes the provider-neutral model
+each current PageVersion through Knowledge's public read API, and invokes the provider-neutral model
 once with bounded, explicitly untrusted Page context. It returns a transient answer with ordered,
 server-selected PageVersion references and visible provenance; empty or changed lookup does not
 invoke the model. The Knowledge web view renders it as escaped text.
 Lookup and answer state remain outside canonical conversation turns. The development-only
-multi-user adapter validates signed provider-neutral local claims. Cortex uses the stable subject
-for conversation ownership and propagates the validated identity through its Brain HTTP client,
-preserving each user's Brain principal and group claims. Opaque local bearers remain an explicit
+multi-user adapter validates signed provider-neutral local claims. Agent uses the stable subject
+for conversation ownership and propagates the validated identity through its Knowledge HTTP client,
+preserving each user's Knowledge principal and group claims. Opaque local bearers remain an explicit
 compatibility path for MCP and non-browser tests.
-The provider-neutral `cortex-ai` package defines immutable
+The provider-neutral `agent-ai` package defines immutable
 single-turn chat contracts, controlled model errors, an async non-streaming protocol, and a
 deterministic synthetic implementation plus a bounded, no-retry OpenAI Responses API adapter.
-Cortex exposes a stateless `POST /chat/turn` through an injected application service. The
+Agent exposes a stateless `POST /chat/turn` through an injected application service. The
 application owns and closes configured provider clients while directly injected clients remain
-caller-owned; deterministic remains the local, Compose, and CI default. Cortex additionally owns
+caller-owned; deterministic remains the local, Compose, and CI default. Agent additionally owns
 local bearer caller identity and durable public Conversation/message persistence in a separate
-PostgreSQL database through `cortex-auth` and `cortex-state`. Thin authenticated HTTP routes use
+PostgreSQL database through `agent-auth` and `agent-state`. Thin authenticated HTTP routes use
 optimistic versions to publish each user/assistant pair atomically without holding a transaction
 during the model call or stream. Authenticated POST SSE passes provider-neutral text deltas through
 a validating same-origin Next.js proxy; partial turns remain transient, and only a valid terminal
-model result is atomically published with a 32,000-character assistant cap. Cortex has no agent
+model result is atomically published with a 32,000-character assistant cap. Agent has no agent
 runtime, production identity implementation, or additional production model provider yet. No
 cross-product package has been extracted.
 
 Streaming validates non-empty deltas and exactly one assistant terminal whose complete content
 matches the accumulated deltas before publication. Its structured operational logs are bounded to
 start/safe outcome, duration, and emitted character count. Compose service DNS uses explicit
-`brain-*` and `cortex-*` ownership names without fixed container names.
+`knowledge-*` and `agent-*` ownership names without fixed container names.
 
-The Cortex web application uses a signed HTTP-only local claims session and server-only Cortex API
+The Agent web application uses a signed HTTP-only local claims session and server-only Agent API
 bearer. Server Components and actions call the public conversation and lookup HTTP contracts
 through generated OpenAPI Zod validation. The browser can create, list, reopen, and append turns
 without optimistic durable messages or direct backend access. A separate read-only evidence view
-shows lookup results as escaped text outside conversation history. Cortex propagates the validated
-provider-neutral local identity to Brain server-side; credentials never reach the browser.
+shows lookup results as escaped text outside conversation history. Agent propagates the validated
+provider-neutral local identity to Knowledge server-side; credentials never reach the browser.
 
-## Brain Purpose And Boundary
+## Knowledge Purpose And Boundary
 
-Brain is a self-hosted, agent-agnostic store for governed organisational knowledge and reusable agent Skills. It stores and serves durable state through HTTP and MCP. It does not browse, fetch provider content, execute Skills, select tools, or orchestrate agent workflows; Cortex or another external agent owns those responsibilities.
+Knowledge is a self-hosted, agent-agnostic store for governed organisational knowledge and reusable agent Skills. It stores and serves durable state through HTTP and MCP. It does not browse, fetch provider content, execute Skills, select tools, or orchestrate agent workflows; Agent or another external agent owns those responsibilities.
 
 ## Components And Dependency Direction
 
@@ -69,14 +69,14 @@ HTTP API ─┐
 MCP ──────┘                                  └─────> provider-neutral embeddings
 ```
 
-- `products/brain/apps/api` and `products/brain/apps/mcp` are thin transport boundaries over shared services. `products/brain/apps/web`
+- `products/knowledge/apps/api` and `products/knowledge/apps/mcp` are thin transport boundaries over shared services. `products/knowledge/apps/web`
   is a read-only Next.js console over the public HTTP API and owns no domain rules.
-- `products/brain/packages/core` owns typed settings plus shared health, identity, knowledge, and Skill application services.
-- `products/brain/packages/schemas` owns explicit transport-neutral public request/response contracts.
-- `products/brain/packages/auth` owns immutable `AuthContext`, local bearer authentication, and the initial same-tenant/any-group policy evaluator.
-- `products/brain/packages/db` owns declarative metadata, identity/access, knowledge, and Skill models, engine/session factories, caller-owned repositories, Alembic, and explicit idempotent seeds.
-- `products/brain/packages/ai` owns the provider-neutral embedding protocol and deterministic synthetic local
-  implementation. `products/brain/packages/search` owns deterministic Markdown chunking and PostgreSQL
+- `products/knowledge/packages/core` owns typed settings plus shared health, identity, knowledge, and Skill application services.
+- `products/knowledge/packages/schemas` owns explicit transport-neutral public request/response contracts.
+- `products/knowledge/packages/auth` owns immutable `AuthContext`, local bearer authentication, and the initial same-tenant/any-group policy evaluator.
+- `products/knowledge/packages/db` owns declarative metadata, identity/access, knowledge, and Skill models, engine/session factories, caller-owned repositories, Alembic, and explicit idempotent seeds.
+- `products/knowledge/packages/ai` owns the provider-neutral embedding protocol and deterministic synthetic local
+  implementation. `products/knowledge/packages/search` owns deterministic Markdown chunking and PostgreSQL
   full-text/pgvector retrieval without exposing database details to transports.
 
 Applications may depend on packages; packages must not depend on applications. HTTP and MCP must not independently implement domain rules.
@@ -85,7 +85,7 @@ Both implemented interfaces accept injected shared services. FastAPI exposes `GE
 and mounts FastMCP's Streamable HTTP transport at `/mcp/` in the same ASGI application;
 FastMCP exposes the `health` tool. HTTP `GET /auth/context` and MCP `auth_context` use thin
 adapters around the same local bearer authenticator and IdentityService. The separate
-`brain-mcp` command preserves stdio, though bearer authentication is available over HTTP.
+`knowledge-mcp` command preserves stdio, though bearer authentication is available over HTTP.
 Neither health check performs authentication or database work.
 
 HTTP `POST /search` and MCP `search` are thin adapters over `SearchService`. The service
@@ -101,7 +101,7 @@ validators used at the server-side transport boundary.
 Authenticated HTTP routes and matching MCP tools create/read Page folders and Sources,
 create Pages with extracted Markdown, append immutable PageVersions, and read Pages with
 only the provenance Sources visible to the caller. Both transports invoke the same
-`KnowledgeService`; Cortex remains responsible for retrieval and extraction.
+`KnowledgeService`; Agent remains responsible for retrieval and extraction.
 
 The same interfaces create, list, and read Skills and append validated immutable
 SkillVersions through `SkillService`. Version mutations require the current version ID
@@ -118,11 +118,11 @@ cosine-vector indexes. Both parent/version pairs enforce same-tenant/current-ver
 The application process never migrates implicitly: Compose orders PostgreSQL
 health, one-shot migration completion, then API startup.
 
-Repository-owned content has three explicit lifecycles. `products/brain/content/default` is the packaged
+Repository-owned content has three explicit lifecycles. `products/knowledge/content/default` is the packaged
 canonical built-in Skill bundle, with executable documents at `<slug>/SKILL.md` and optional
-validated references. `products/brain/examples/northstar` is a packaged, text-only fictional example whose
+validated references. `products/knowledge/examples/northstar` is a packaged, text-only fictional example whose
 manifest drives the explicit idempotent database seed while retaining immutable history and
-stable UUIDs. `products/brain/tests/fixtures/dummy` is provider-neutral content-only test data and is neither
+stable UUIDs. `products/knowledge/tests/fixtures/dummy` is provider-neutral content-only test data and is neither
 a production default nor a database seed.
 
 ## Durable Data Rules
@@ -135,7 +135,7 @@ a production default nor a database seed.
 - Folders provide typed hierarchy; tags provide classification and never authorization.
 - Top-level domain data is organization-scoped.
 
-The initial operational model is one Brain/Cortex stack with one active customer
+The initial operational model is one Knowledge/Agent stack with one active customer
 Organization per tenant. Organization scoping remains a database and authorization
 invariant for defense in depth and synthetic tests; shared-SaaS tenant discovery,
 provisioning, and cross-tenant administration are not current product requirements.

@@ -1,0 +1,282 @@
+from collections.abc import Awaitable, Callable
+from typing import Annotated, cast
+from uuid import UUID
+
+from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastmcp import FastMCP
+from sqlalchemy.exc import SQLAlchemyError
+
+from knowledge_api.auth import get_auth_context, require_steward
+from knowledge_auth import AuthContext, AuthorizationDenied, LocalBearerAuthenticator
+from knowledge_core import (
+    DuplicatePageContent,
+    HealthService,
+    IdentityService,
+    InvalidKnowledgeReference,
+    KnowledgeConflict,
+    KnowledgeNotFound,
+    KnowledgeService,
+    SearchService,
+    Settings,
+    SkillConflict,
+    SkillNotFound,
+    SkillService,
+    VersionConflict,
+    create_knowledge_service,
+    create_local_authenticator,
+    create_persistence_services,
+    create_search_service,
+    create_skill_service,
+)
+from knowledge_core.settings import get_settings
+from knowledge_mcp import create_server
+from knowledge_schemas import (
+    AuthContextResponse,
+    FolderCreate,
+    FolderResponse,
+    HealthResponse,
+    InvalidSkillDocument,
+    PageCreate,
+    PageInventoryItem,
+    PageResponse,
+    PageVersionCreate,
+    SearchRequest,
+    SearchResponse,
+    SkillCreate,
+    SkillInventoryItem,
+    SkillResponse,
+    SkillVersionCreate,
+    SourceCreate,
+    SourceInventoryItem,
+    SourceResponse,
+)
+
+
+def get_health_service(request: Request) -> HealthService:
+    return cast(HealthService, request.app.state.health_service)
+
+
+def create_app(
+    *,
+    settings: Settings | None = None,
+    health_service: HealthService | None = None,
+    identity_service: IdentityService | None = None,
+    knowledge_service: KnowledgeService | None = None,
+    skill_service: SkillService | None = None,
+    search_service: SearchService | None = None,
+    authenticator: LocalBearerAuthenticator | None = None,
+    mcp_server: FastMCP | None = None,
+) -> FastAPI:
+    resolved_settings = settings or get_settings()
+    resolved_health_service = health_service or HealthService(
+        service_name="knowledge-api",
+        settings=resolved_settings,
+    )
+    resolved_identity_service = identity_service or IdentityService()
+    if knowledge_service is None and skill_service is None and search_service is None:
+        (
+            resolved_knowledge_service,
+            resolved_skill_service,
+            resolved_search_service,
+        ) = create_persistence_services(resolved_settings)
+    else:
+        resolved_knowledge_service = knowledge_service or create_knowledge_service(
+            resolved_settings
+        )
+        resolved_skill_service = skill_service or create_skill_service(resolved_settings)
+        resolved_search_service = search_service or create_search_service(resolved_settings)
+    resolved_authenticator = authenticator or create_local_authenticator(resolved_settings)
+    resolved_mcp_server = mcp_server or create_server(
+        settings=resolved_settings,
+        health_service=resolved_health_service,
+        identity_service=resolved_identity_service,
+        knowledge_service=resolved_knowledge_service,
+        skill_service=resolved_skill_service,
+        search_service=resolved_search_service,
+        authenticator=resolved_authenticator,
+    )
+    mcp_app = resolved_mcp_server.http_app(path="/")
+    app = FastAPI(
+        title="Knowledge",
+        version="0.1.0",
+        lifespan=mcp_app.lifespan,
+    )
+    app.state.health_service = resolved_health_service
+    app.state.identity_service = resolved_identity_service
+    app.state.knowledge_service = resolved_knowledge_service
+    app.state.skill_service = resolved_skill_service
+    app.state.search_service = resolved_search_service
+    app.state.authenticator = resolved_authenticator
+    app.state.local_identity_secret = (
+        resolved_settings.local_identity_secret.get_secret_value()
+        if resolved_settings.local_identity_secret is not None
+        else None
+    )
+    app.state.mcp_server = resolved_mcp_server
+
+    @app.get("/health", response_model=HealthResponse, tags=["system"])
+    def health(
+        service: Annotated[HealthService, Depends(get_health_service)],
+    ) -> HealthResponse:
+        return service.check()
+
+    @app.get("/auth/context", response_model=AuthContextResponse, tags=["identity"])
+    def auth_context(
+        context: Annotated[AuthContext, Depends(get_auth_context)],
+    ) -> AuthContextResponse:
+        return resolved_identity_service.describe(context)
+
+    @app.post("/folders", response_model=FolderResponse, status_code=status.HTTP_201_CREATED)
+    async def create_folder(
+        request: FolderCreate,
+        context: Annotated[AuthContext, Depends(require_steward)],
+    ) -> FolderResponse:
+        return await call_knowledge(resolved_knowledge_service.create_folder, context, request)
+
+    @app.get("/folders/{folder_id}", response_model=FolderResponse)
+    async def get_folder(
+        folder_id: UUID,
+        context: Annotated[AuthContext, Depends(get_auth_context)],
+    ) -> FolderResponse:
+        return await call_knowledge(resolved_knowledge_service.get_folder, context, folder_id)
+
+    @app.post("/sources", response_model=SourceResponse, status_code=status.HTTP_201_CREATED)
+    async def create_source(
+        request: SourceCreate,
+        context: Annotated[AuthContext, Depends(require_steward)],
+    ) -> SourceResponse:
+        return await call_knowledge(resolved_knowledge_service.create_source, context, request)
+
+    @app.get("/sources/{source_id}", response_model=SourceResponse)
+    async def get_source(
+        source_id: UUID,
+        context: Annotated[AuthContext, Depends(get_auth_context)],
+    ) -> SourceResponse:
+        return await call_knowledge(resolved_knowledge_service.get_source, context, source_id)
+
+    @app.get("/sources", response_model=list[SourceInventoryItem])
+    async def list_sources(
+        context: Annotated[AuthContext, Depends(get_auth_context)],
+    ) -> list[SourceInventoryItem]:
+        return await call_knowledge(resolved_knowledge_service.list_sources, context)
+
+    @app.post("/pages", response_model=PageResponse, status_code=status.HTTP_201_CREATED)
+    async def create_page(
+        request: PageCreate,
+        context: Annotated[AuthContext, Depends(require_steward)],
+    ) -> PageResponse:
+        return await call_knowledge(resolved_knowledge_service.create_page, context, request)
+
+    @app.get("/pages", response_model=list[PageInventoryItem])
+    async def list_pages(
+        context: Annotated[AuthContext, Depends(get_auth_context)],
+    ) -> list[PageInventoryItem]:
+        return await call_knowledge(resolved_knowledge_service.list_pages, context)
+
+    @app.get("/pages/by-path/{page_path:path}", response_model=PageResponse)
+    async def get_page_by_path(
+        page_path: str,
+        context: Annotated[AuthContext, Depends(get_auth_context)],
+    ) -> PageResponse:
+        return await call_knowledge(resolved_knowledge_service.get_page_by_path, context, page_path)
+
+    @app.get("/pages/{page_id}", response_model=PageResponse)
+    async def get_page(
+        page_id: UUID,
+        context: Annotated[AuthContext, Depends(get_auth_context)],
+    ) -> PageResponse:
+        return await call_knowledge(resolved_knowledge_service.get_page, context, page_id)
+
+    @app.post(
+        "/pages/{page_id}/versions",
+        response_model=PageResponse,
+        status_code=status.HTTP_201_CREATED,
+    )
+    async def create_page_version(
+        page_id: UUID,
+        request: PageVersionCreate,
+        context: Annotated[AuthContext, Depends(require_steward)],
+    ) -> PageResponse:
+        return await call_knowledge(
+            resolved_knowledge_service.create_page_version, context, page_id, request
+        )
+
+    @app.post("/skills", response_model=SkillResponse, status_code=status.HTTP_201_CREATED)
+    async def create_skill(
+        request: SkillCreate,
+        context: Annotated[AuthContext, Depends(require_steward)],
+    ) -> SkillResponse:
+        return await call_knowledge(resolved_skill_service.create_skill, context, request)
+
+    @app.get("/skills", response_model=list[SkillInventoryItem])
+    async def list_skills(
+        context: Annotated[AuthContext, Depends(get_auth_context)],
+    ) -> list[SkillInventoryItem]:
+        return await call_knowledge(resolved_skill_service.list_skills, context)
+
+    @app.get("/skills/by-slug/{slug}", response_model=SkillResponse)
+    async def get_skill_by_slug(
+        slug: str,
+        context: Annotated[AuthContext, Depends(get_auth_context)],
+        version: int | None = None,
+    ) -> SkillResponse:
+        return await call_knowledge(
+            resolved_skill_service.get_skill_by_slug, context, slug, version
+        )
+
+    @app.get("/skills/{skill_id}", response_model=SkillResponse)
+    async def get_skill(
+        skill_id: UUID,
+        context: Annotated[AuthContext, Depends(get_auth_context)],
+        version: int | None = None,
+    ) -> SkillResponse:
+        return await call_knowledge(resolved_skill_service.get_skill, context, skill_id, version)
+
+    @app.post(
+        "/skills/{skill_id}/versions",
+        response_model=SkillResponse,
+        status_code=status.HTTP_201_CREATED,
+    )
+    async def create_skill_version(
+        skill_id: UUID,
+        request: SkillVersionCreate,
+        context: Annotated[AuthContext, Depends(require_steward)],
+    ) -> SkillResponse:
+        return await call_knowledge(
+            resolved_skill_service.create_skill_version, context, skill_id, request
+        )
+
+    @app.post("/search", response_model=SearchResponse, tags=["search"])
+    async def search(
+        request: SearchRequest,
+        context: Annotated[AuthContext, Depends(get_auth_context)],
+    ) -> SearchResponse:
+        return await call_knowledge(resolved_search_service.search, context, request)
+
+    app.mount("/mcp", mcp_app, name="mcp")
+
+    return app
+
+
+async def call_knowledge[**P, R](
+    function: Callable[P, Awaitable[R]], *args: P.args, **kwargs: P.kwargs
+) -> R:
+    try:
+        return await function(*args, **kwargs)
+    except KnowledgeNotFound as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except AuthorizationDenied as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except (InvalidKnowledgeReference, DuplicatePageContent, KnowledgeConflict) as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+    except SkillNotFound as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except (SkillConflict, VersionConflict) as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+    except InvalidSkillDocument as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    except SQLAlchemyError as error:
+        raise HTTPException(status_code=503, detail="Database operation unavailable") from error
+
+
+app = create_app()

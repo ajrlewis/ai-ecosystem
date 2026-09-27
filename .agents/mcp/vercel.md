@@ -1,6 +1,6 @@
 # Vercel MCP Capability
 
-Adopted for Brain's intended production host once a Vercel project exists. Repository code remains canonical; deployments and hosted configuration changes require explicit maintainer authorization.
+Adopted for Knowledge's intended production host once a Vercel project exists. Repository code remains canonical; deployments and hosted configuration changes require explicit maintainer authorization.
 
 ## Capability
 

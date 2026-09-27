@@ -1,15 +1,15 @@
 # Monorepo Preset
 
-Adopted for the Mind product monorepo. Brain implements identity/access, governed knowledge,
-Skill persistence, search, and web-console slices. Cortex implements a minimal API and web shell.
+Adopted for the AI Ecosystem product monorepo. Knowledge implements identity/access, governed knowledge,
+Skill persistence, search, and web-console slices. Agent implements a minimal API and web shell.
 
 ```text
 products/
-├── brain/
+├── knowledge/
 │   ├── apps/             HTTP, MCP, and web interfaces
-│   ├── packages/         Brain domain and infrastructure packages
+│   ├── packages/         Knowledge domain and infrastructure packages
 │   └── tests/
-└── cortex/               API and web foundation; agent runtime deferred
+└── agent/               API and web foundation; agent runtime deferred
 ```
 
 - Create only directories that represent real components. The names above are conventional examples, not mandatory empty scaffolding.

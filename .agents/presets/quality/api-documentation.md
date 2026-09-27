@@ -1,6 +1,6 @@
 # API Documentation Preset
 
-Adopted for Brain's typed Python, HTTP, and MCP contracts. FastAPI OpenAPI and callable documentation must describe authorization, provenance, version selection, and failure behavior where relevant.
+Adopted for Knowledge's typed Python, HTTP, and MCP contracts. FastAPI OpenAPI and callable documentation must describe authorization, provenance, version selection, and failure behavior where relevant.
 
 - Give every callable a clear, typed signature so editors and static tools can expose its contract.
 - Use the language's native documentation format, such as docstrings, JSDoc or TSDoc, XML documentation comments, or rustdoc.

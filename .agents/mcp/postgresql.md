@@ -1,6 +1,6 @@
 # PostgreSQL MCP Capability
 
-Adopted for Brain's intended PostgreSQL + pgvector persistence boundary when local schema, migrations, and tests cannot answer a task. Default to disposable development data and read-only inspection.
+Adopted for Knowledge's intended PostgreSQL + pgvector persistence boundary when local schema, migrations, and tests cannot answer a task. Default to disposable development data and read-only inspection.
 
 ## Capability
 

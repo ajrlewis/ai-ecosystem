@@ -1,6 +1,6 @@
 # GitHub MCP Capability
 
-Adopted for `ajrlewis/brain` repository metadata, pull requests, reviews, Actions, and protection inspection. Remote setting changes still require explicit maintainer authorization.
+Adopted for `ajrlewis/knowledge` repository metadata, pull requests, reviews, Actions, and protection inspection. Remote setting changes still require explicit maintainer authorization.
 
 ## Capability
 

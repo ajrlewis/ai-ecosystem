@@ -1,26 +1,26 @@
-# Mind
+# AI Ecosystem
 
-Mind is the product workspace for Brain and Cortex.
+AI Ecosystem is the product workspace for Knowledge and Agent.
 
-- [Brain](products/brain/README.md) stores governed organisational knowledge and reusable
+- [Knowledge](products/knowledge/README.md) stores governed organisational knowledge and reusable
   agent Skills.
-- [Cortex](products/cortex/README.md) is the agent runtime that reasons and acts using Brain and
+- [Agent](products/agent/README.md) is the agent runtime that reasons and acts using Knowledge and
   external tools.
 
-Cortex currently has a FastAPI service, Next.js conversation application, typed Brain HTTP client,
+Agent currently has a FastAPI service, Next.js conversation application, typed Knowledge HTTP client,
 provider-neutral deterministic and OpenAI model adapters, and its own durable conversation store.
 Agent execution and production identity remain intentionally deferred.
 
-The products are developed together but remain independently deployable. Cortex integrates with
-Brain through Brain's public HTTP or MCP interfaces and never through Brain's database.
+The products are developed together but remain independently deployable. Agent integrates with
+Knowledge through Knowledge's public HTTP or MCP interfaces and never through Knowledge's database.
 
 ```text
 products/
-├── brain/
+├── knowledge/
 │   ├── apps/
 │   ├── packages/
 │   └── tests/
-└── cortex/
+└── agent/
     ├── apps/
     ├── tests/
     └── README.md
@@ -30,8 +30,8 @@ Root workspace files coordinate shared development commands and local infrastruc
 implementations, tests, migrations, content, and product-specific documentation remain inside
 their product directory.
 
-The Compose service keys make product ownership explicit: `brain-postgres`, `brain-migrate`,
-`brain-api`, `brain-web`, `cortex-db-init`, `cortex-migrate`, `cortex-api`, and `cortex-web`.
+The Compose service keys make product ownership explicit: `knowledge-postgres`, `knowledge-migrate`,
+`knowledge-api`, `knowledge-web`, `agent-db-init`, `agent-migrate`, `agent-api`, and `agent-web`.
 
 ## Quick start with Docker
 
@@ -40,8 +40,8 @@ repository root:
 
 ```bash
 docker compose up -d --build
-docker compose exec -T brain-api brain-seed-northstar
-docker compose exec -T brain-api brain-seed-defaults \
+docker compose exec -T knowledge-api knowledge-seed-northstar
+docker compose exec -T knowledge-api knowledge-seed-defaults \
   --organization northstar \
   --policy "Northstar organization-wide" \
   --steward northstar-alex \
@@ -51,24 +51,26 @@ docker compose ps
 
 Both seed commands are safe to rerun. The Northstar seed supplies fictional knowledge,
 principals, and access groups; the defaults seed supplies the repository-owned Skills.
+The legacy `northstar-cortex` subject is intentionally retained as the seeded audit principal so
+existing installations keep the same durable Principal identity after the product rename.
 
 | Service | URL | Expected result |
 | --- | --- | --- |
-| Brain console | <http://127.0.0.1:3000/sign-in> | Local sign-in page |
-| Brain API health | <http://127.0.0.1:8000/health> | Healthy API response |
-| Brain API docs | <http://127.0.0.1:8000/docs> | Interactive OpenAPI documentation |
-| Brain MCP | <http://127.0.0.1:8000/mcp/> | Streamable HTTP endpoint (not a browser UI) |
-| Cortex workspace | <http://127.0.0.1:3100/sign-in> | Local sign-in page |
-| Cortex API health | <http://127.0.0.1:8100/health> | Healthy API response |
-| Cortex API docs | <http://127.0.0.1:8100/docs> | Interactive OpenAPI documentation |
+| Knowledge console | <http://127.0.0.1:3000/sign-in> | Local sign-in page |
+| Knowledge API health | <http://127.0.0.1:8000/health> | Healthy API response |
+| Knowledge API docs | <http://127.0.0.1:8000/docs> | Interactive OpenAPI documentation |
+| Knowledge MCP | <http://127.0.0.1:8000/mcp/> | Streamable HTTP endpoint (not a browser UI) |
+| Agent workspace | <http://127.0.0.1:3100/sign-in> | Local sign-in page |
+| Agent API health | <http://127.0.0.1:8100/health> | Healthy API response |
+| Agent API docs | <http://127.0.0.1:8100/docs> | Interactive OpenAPI documentation |
 
 The disposable Compose credentials are:
 
 Both sign-in forms list the same synthetic users. Their disposable development password is
-`mind-local-dev`: `alex`, `morgan`, and `taylor`.
+`ai-ecosystem-local-dev`: `alex`, `morgan`, and `taylor`.
 
-Sign in to Brain to browse the seeded Pages, provenance, Skills, and search results. Sign in to
-Cortex to create a durable local conversation or query the seeded Brain knowledge through Cortex.
+Sign in to Knowledge to browse the seeded Pages, provenance, Skills, and search results. Sign in to
+Agent to create a durable local conversation or query the seeded Knowledge knowledge through Agent.
 The default deterministic model is hermetic, so this flow does not need an external model key.
 
 For quick command-line smoke tests:
@@ -77,16 +79,16 @@ For quick command-line smoke tests:
 curl --fail http://127.0.0.1:8000/health
 curl --fail http://127.0.0.1:8100/health
 curl --fail \
-  -H 'Authorization: Bearer brain-local-dev' \
+  -H 'Authorization: Bearer knowledge-local-dev' \
   http://127.0.0.1:8000/auth/context
 ```
 
 ### Seeded access profiles
 
 The development adapter signs provider-neutral subject, display-name, tenant, scope, app-role,
-principal, and group claims. `brain.api` and `cortex.api` grant API access;
-`knowledge.steward` permits Brain mutations and `conversation.user` permits Cortex conversation
-operations. Brain groups remain resource-policy claims, not roles. Northstar includes:
+principal, and group claims. `knowledge.api` and `agent.api` grant API access;
+`knowledge.steward` permits Knowledge mutations and `conversation.user` permits Agent conversation
+operations. Knowledge groups remain resource-policy claims, not roles. Northstar includes:
 
 | Profile | Principal ID | Groups | Access exercised |
 | --- | --- | --- | --- |

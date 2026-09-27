@@ -1,108 +1,210 @@
 # Next Session
 
-## Status — 2026-09-21
+## Status — 2026-09-27
 
-The root README now documents a verified Docker quick start, local URLs, disposable credentials,
-health checks, seed commands, and the current single-identity login boundary. The Northstar seed
-contains three fictional human authorization profiles: Alex belongs to the investment team,
-Morgan belongs to portfolio operations, and Taylor has no group membership. They are Brain
-principals and group claims, not password-bearing users or application roles.
+The development-only multi-user authentication slice from the previous handoff has been completed
+and merged. The repository is still named `mind`, and its two independently deployable products
+are still named Brain and Cortex throughout directories, packages, imports, services,
+configuration, databases, tests, generated artifacts, documentation, and development credentials.
 
-The current local adapters still accept one configured web username/password and one configured
-API bearer per product. Brain maps its bearer to one configured organization, principal, and set
-of groups; Cortex maps its bearer to one opaque owner and calls Brain as one configured service
-identity. Testing another Brain profile therefore requires changing environment variables and
-recreating services. Production Entra authentication is not implemented.
+The naming discussion has converged on a neutral, cloneable ecosystem identity:
+
+```text
+ai-ecosystem/
+└── products/
+    ├── knowledge/
+    └── agent/
+```
+
+The broader target architecture for shared packages, future products, deployment composition, and
+branding remains documented separately in `NAMING.md`. This session should perform only the large
+repository and product rename needed to establish that foundation.
 
 ## Objective
 
-Implement a development-only, multi-user authentication adapter that makes the local Docker login
-flow resemble the intended Microsoft Entra claim model without turning Mind into an identity or
-authorization server. Locally configured synthetic users should be able to sign in and exercise
-different application scopes and app roles against the seeded database.
+Rename the workspace from Mind to AI Ecosystem, Brain to Knowledge, and Cortex to Agent without
+changing product behavior, weakening product boundaries, or combining their independently owned
+state and deployment lifecycles.
 
-## Intended Identity Boundary
+The intended mapping is:
 
-- Microsoft Entra remains the future production identity provider and token issuer.
-- OAuth scopes express whether a client may access a Brain or Cortex API.
-- Entra app roles express what an authenticated user is permitted to do in the application.
-- Mind validates issuer-provided claims and applies its own resource authorization rules; it does
-  not own production passwords, issue production access tokens, or provide user administration.
-- The local adapter only emulates the validated claim result. It must not implement OAuth, mimic
-  Entra endpoints, or establish a second production identity model.
+```text
+mind             -> ai-ecosystem
+products/brain   -> products/knowledge
+products/cortex  -> products/agent
+Brain            -> Knowledge
+Cortex           -> Agent
+```
 
-## Next Bounded Slice
+Suggested repository description:
 
-### 1. Shared local claim contract
+> AI Ecosystem is a self-hosted foundation for building enterprise AI products around shared,
+> governed organisational knowledge and reusable agent capabilities.
 
-- Define the minimum provider-neutral identity result needed by the applications: stable subject,
-  display name, organization/tenant, granted API scopes, and application roles.
-- Choose explicit Brain and Cortex scope names and a small role vocabulary based on real permitted
-  operations. Do not call Brain groups “roles”; document the mapping from app roles to existing
-  Brain principals/group claims or evolve the authorization context deliberately if direct role
-  checks are required.
-- Keep the contract suitable for a later Entra token validator, but add no Microsoft SDK or remote
-  identity-provider dependency in this slice.
+`ai-ecosystem` is intentionally neutral so another organisation can clone and brand it:
 
-### 2. Configuration-backed local users
+```text
+ai-ecosystem        # upstream
+acme-ai-ecosystem   # branded deployment or fork
+```
 
-- Replace each web application's single development credential with a typed, server-only local
-  user fixture containing username, development password, subject, display name, scopes, and roles.
-- Include representative synthetic users such as administrator/steward, investment, operations,
-  and reader/organization-only. Resolve their stable identities against the Northstar seed.
-- Store only disposable development fixtures in repository configuration. Never return passwords,
-  API bearers, session secrets, or the complete fixture through browser code, HTML, logs, API
-  responses, generated artifacts, or client bundles.
-- Fail startup or sign-in safely for malformed fixtures, duplicate usernames/subjects, unknown
-  roles, missing required scopes, or identities that do not resolve.
+## Product boundaries to preserve
 
-### 3. Signed local sessions and API propagation
+- **Knowledge** owns durable organisational knowledge, reusable Skills, provenance, access
+  control, versions, and retrieval.
+- **Agent** owns conversations, reasoning, model interaction, tool use, workflows, and execution.
+- Knowledge and Agent remain independently deployable peer products.
+- Agent consumes Knowledge only through public HTTP or MCP interfaces, never through Knowledge's
+  database or internal packages.
+- Agent is one Knowledge consumer. Future products may own specialised agents while consuming the
+  same governed Knowledge and Skills.
+- The rename must not introduce a parent-child structure such as `knowledge/{knowledge,agent}`.
 
-- Put only the minimum authenticated local claims in integrity-protected, HTTP-only, same-site
-  sessions. Preserve safe redirect handling, sign-out, constant-time credential comparison where
-  applicable, and server-only backend calls.
-- Enforce the required application scope at the API boundary and enforce app roles on operations
-  that differ by permission. Keep resource-level organization and policy filtering in Brain.
-- Ensure Cortex does not silently collapse every signed-in local user onto one owner or one Brain
-  authorization identity. Propagate a validated provider-neutral identity through public service
-  boundaries without exposing the server credential to the browser and without accessing Brain's
-  database directly.
-- Keep the existing opaque local bearer available for non-browser integration tests and MCP if
-  needed, with an explicit compatibility boundary and no ambiguous precedence.
+## Rename inventory
 
-### 4. Docker experience and verification
+### Repository and directories
 
-- Make the seeded users directly selectable through the documented Brain and Cortex sign-in forms;
-  changing `.env` and recreating containers should no longer be necessary to switch personas.
-- Update `.env.example`, Compose, the root README, product documentation, access-control contract,
-  architecture notes, and generated API contracts when public schemas change.
-- Add unit and browser tests for each representative role, required and missing scopes, invalid
-  credentials, session tampering, cross-user conversation isolation, restricted Brain content,
-  sign-out, and the absence of secrets/claims from client bundles.
-- Add PostgreSQL-backed coverage proving that the seeded personas resolve and that investment-only
-  content is visible to Alex but absent for Morgan and Taylor before ranking or limiting.
+- Rename `products/brain` to `products/knowledge` with history-preserving Git moves.
+- Rename `products/cortex` to `products/agent` with history-preserving Git moves.
+- Update root workspace manifests, scripts, ignore rules, Docker build contexts, and documentation
+  paths.
+- Treat the local checkout directory and GitHub repository rename as separate operations. Renaming
+  the remote repository or changing remote settings requires explicit maintainer authorization.
 
-## Definition Of Done
+### Python and Node packages
 
-- A developer can start Compose once and sign in as multiple documented synthetic users without
-  editing environment variables or running an identity provider.
-- Local sessions emulate the intended validated Entra scopes and app roles while remaining clearly
-  development-only.
-- Each Cortex user has isolated durable state and receives Brain results for their own propagated
-  authorization identity.
-- Scope checks, role checks, and Brain resource authorization are distinct, named, and covered by
-  success and denial tests.
-- No production auth server, password database, OAuth endpoint, or provider-specific domain
-  coupling is introduced.
-- Relevant Python, TypeScript, PostgreSQL, contract, Docker, Compose, and Playwright checks pass,
-  and the final diff and built client artifacts contain no secrets.
+Rename Python distributions, import namespaces, commands, and workspace entries consistently. The
+exact final mapping should be inventoried before edits, but the intended pattern is:
 
-## Explicitly Deferred
+```text
+brain-*        -> knowledge-*
+brain_*        -> knowledge_*
+cortex-*       -> agent-*
+cortex_*       -> agent_*
+@brain/web     -> @ai-ecosystem/knowledge-web
+@cortex/web    -> @ai-ecosystem/agent-web
+```
 
-- Microsoft Entra tenant registration, consent, redirect URIs, client secrets/certificates, live
-  token acquisition, JWKS validation, group overage handling, and production deployment;
-- user provisioning, password management, invitations, role administration UI, SCIM, SAML, and
-  Mind-issued production tokens;
-- generalized RBAC/ABAC engines, custom-role builders, organization switching, and shared-SaaS
-  tenant discovery;
-- agent runtime, tool approvals, connectors, background work, and unrelated knowledge features.
+The current Agent-owned Brain HTTP client should become an Agent-owned Knowledge client, for
+example:
+
+```text
+products/agent/packages/knowledge-client
+agent-knowledge
+```
+
+Do not create a shared cross-product domain package while renaming it. The client remains owned by
+Agent and depends only on Knowledge's public contract.
+
+### Applications, services, and state
+
+Use explicit product ownership in service and application names:
+
+```text
+knowledge-api
+knowledge-web
+knowledge-mcp
+knowledge-migrate
+knowledge-postgres
+
+agent-api
+agent-web
+agent-migrate
+agent-state
+```
+
+Update Compose service keys, health identities, image targets, executable names, database names,
+migration configuration, test URLs, local seed commands, and dependency diagnostics. Preserve
+separate Knowledge and Agent migration chains and databases.
+
+### Configuration and authentication names
+
+Inventory and rename product-specific environment variables, scopes, roles, cookies, local
+bearers, headers, synthetic subjects, and test credentials. Avoid changing their semantics during
+the rename.
+
+Pay particular attention to names such as:
+
+```text
+BRAIN_*
+CORTEX_*
+brain.api
+cortex.api
+brain-session
+cortex-session
+brain-local-dev
+cortex-local-dev
+```
+
+Provider-neutral names such as `LOCAL_USERS`, `LOCAL_IDENTITY_SECRET`, and the signed local claim
+model should remain neutral when they already describe shared concepts accurately.
+
+### Contracts, generated files, and content
+
+- Update OpenAPI titles, generated Zod validators, checked-in contract paths, and drift scripts.
+- Regenerate `uv.lock`, `package-lock.json`, OpenAPI documents, and generated clients from their
+  authoritative sources; do not hand-edit generated contracts.
+- Update default bundle identities, deterministic UUID namespaces only when identity continuity is
+  explicitly understood, seed commands, fixture paths, and synthetic provenance subjects.
+- Preserve existing database and content identity where a cosmetic rename does not require a new
+  identifier. Avoid silently making idempotent seeds create duplicate entities or versions.
+- Keep Northstar fictional and retain its role as an optional example rather than a product or
+  tenant name.
+
+### Documentation and agent context
+
+Update the root README, both product specifications, access-control and data-model documents,
+architecture guidance, canonical commands, diagrams, examples, and agent-managed context. Search
+for both case-sensitive and case-insensitive remnants of Mind, Brain, and Cortex, then review each
+remaining occurrence deliberately rather than applying an unchecked global replacement.
+
+Historical references may retain old names when changing them would falsify history. Current
+architecture, commands, and product descriptions must use the new names consistently.
+
+## Suggested execution order
+
+1. Inventory every current name across tracked files, package metadata, generated artifacts,
+   runtime configuration, persisted identifiers, and remote repository settings.
+2. Define and document the complete old-to-new mapping before changing files.
+3. Create a dedicated rename branch from an up-to-date `main`.
+4. Move the two product directories with `git mv`.
+5. Rename Python distributions, modules, commands, npm workspaces, service names, configuration,
+   database and migration references, authentication names, tests, and documentation.
+6. Regenerate lockfiles and public API contracts using canonical commands.
+7. Run focused checks after each product becomes internally consistent, then run the complete
+   cross-product verification suite.
+8. Search for stale names and classify any intentional historical or compatibility occurrences.
+9. Review the final diff for accidental behavior changes, secrets, identity discontinuity, broken
+   paths, and generated-file drift.
+10. Deliver the rename through a focused pull request. Rename the GitHub repository or local
+    checkout only when separately authorized and at the safest point in the delivery sequence.
+
+## Definition of done
+
+- The tracked workspace consistently presents itself as AI Ecosystem with Knowledge and Agent
+  products.
+- Product directories, Python and npm packages, commands, Compose services, configuration,
+  databases, migrations, contracts, tests, and current documentation use the agreed names.
+- Knowledge and Agent remain independently deployable with separate state and migrations.
+- Agent still accesses Knowledge only through its public HTTP or MCP interfaces.
+- Existing seeds remain idempotent and do not create duplicate durable identities solely because
+  of the rename.
+- Generated contracts and lockfiles have no drift.
+- Relevant Ruff, Pyright, pytest, npm lint, typecheck, unit, build, contract, Docker, Compose,
+  PostgreSQL integration, and Playwright checks pass.
+- A final repository-wide search documents or removes every remaining old-name occurrence.
+- `NAMING.md` remains a separate follow-on architecture document; shared package extraction,
+  branding consolidation, and unrelated refactors are not folded into the rename.
+
+## Explicitly deferred
+
+- Extracting root `packages/ui`, `packages/brand`, observability, identity, configuration, or test
+  packages;
+- consolidating the two current frontend themes or creating a shared design system;
+- adding the default Brand Skill or structured theme references;
+- adding future products, connectors, actions, automation, or an agent runtime;
+- changing authorization behavior, identity semantics, database models, or public product
+  capabilities;
+- production deployment or hosted database changes;
+- renaming the GitHub repository, changing remote settings, or moving the local checkout without
+  explicit maintainer authorization.

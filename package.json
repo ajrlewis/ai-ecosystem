@@ -1,24 +1,24 @@
 {
-  "name": "mind",
+  "name": "ai-ecosystem",
   "private": true,
   "workspaces": [
     "products/*/apps/web"
   ],
   "scripts": {
-    "web:dev": "npm run dev --workspace @brain/web",
-    "web:lint": "npm run lint --workspace @brain/web",
-    "web:typecheck": "npm run typecheck --workspace @brain/web",
-    "web:test": "npm run test --workspace @brain/web",
-    "web:build": "npm run build --workspace @brain/web",
-    "web:contracts": "npm run contracts --workspace @brain/web",
-    "web:contracts:check": "npm run contracts:check --workspace @brain/web",
-    "cortex:web:dev": "npm run dev --workspace @cortex/web",
-    "cortex:web:lint": "npm run lint --workspace @cortex/web",
-    "cortex:web:typecheck": "npm run typecheck --workspace @cortex/web",
-    "cortex:web:test": "npm run test --workspace @cortex/web",
-    "cortex:web:build": "npm run build --workspace @cortex/web",
-    "cortex:web:contracts": "npm run contracts --workspace @cortex/web",
-    "cortex:web:contracts:check": "npm run contracts:check --workspace @cortex/web"
+    "web:dev": "npm run dev --workspace @ai-ecosystem/knowledge-web",
+    "web:lint": "npm run lint --workspace @ai-ecosystem/knowledge-web",
+    "web:typecheck": "npm run typecheck --workspace @ai-ecosystem/knowledge-web",
+    "web:test": "npm run test --workspace @ai-ecosystem/knowledge-web",
+    "web:build": "npm run build --workspace @ai-ecosystem/knowledge-web",
+    "web:contracts": "npm run contracts --workspace @ai-ecosystem/knowledge-web",
+    "web:contracts:check": "npm run contracts:check --workspace @ai-ecosystem/knowledge-web",
+    "agent:web:dev": "npm run dev --workspace @ai-ecosystem/agent-web",
+    "agent:web:lint": "npm run lint --workspace @ai-ecosystem/agent-web",
+    "agent:web:typecheck": "npm run typecheck --workspace @ai-ecosystem/agent-web",
+    "agent:web:test": "npm run test --workspace @ai-ecosystem/agent-web",
+    "agent:web:build": "npm run build --workspace @ai-ecosystem/agent-web",
+    "agent:web:contracts": "npm run contracts --workspace @ai-ecosystem/agent-web",
+    "agent:web:contracts:check": "npm run contracts:check --workspace @ai-ecosystem/agent-web"
   },
   "allowScripts": {
     "@tailwindcss/oxide@4.1.13": true,
