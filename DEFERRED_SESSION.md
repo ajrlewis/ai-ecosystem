@@ -45,25 +45,13 @@ Keep product-specific build inputs, routes, environment validation, and test beh
 application. Do not force superficially similar configurations together when their constraints
 differ.
 
-## 3. Brand Skills and structured theme references
+## 3. Runtime theme loading
 
-After `@ai-ecosystem/brand` is authoritative, add a default Brand Skill and structured theme
-references without making frontend rendering depend on Knowledge availability:
-
-```text
-products/knowledge/content/default/skills/brand/
-├── SKILL.md
-└── references/theme.json
-
-products/knowledge/examples/northstar/skills/brand/
-├── SKILL.md
-└── references/theme.json
-```
-
-`SKILL.md` contains agent instructions; frontends must not parse its prose as application styling.
-Validate `theme.json` against the same semantic theme contract as the compiled UI theme, and add a
-drift check between the default reference and compiled default palette. Northstar remains an
-optional fictional example.
+Default and synthetic Northstar Brand Skills now carry structured, contract-validated theme
+references as packaged Knowledge bundle assets. Loading those references from Knowledge, a Skill,
+a database, tenant settings, or a remote provider as runtime frontend configuration remains
+explicitly deferred. Frontends should continue to use compiled local themes unless a future brief
+defines lifecycle, authorization, caching, failure, and deployment behavior.
 
 ## 4. Other shared implementation packages
 

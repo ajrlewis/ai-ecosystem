@@ -1,3 +1,4 @@
+import json
 import os
 from dataclasses import dataclass
 from hashlib import sha256
@@ -176,6 +177,15 @@ def load_northstar_bundle(root: Path | None = None) -> NorthstarBundle:
 
     for skill_path in sorted((bundle_root / "skills").glob("*/SKILL.md")):
         parse_skill_document(skill_path.read_bytes().decode("utf-8"))
+    brand_reference = "skills/brand/references/theme.json"
+    try:
+        raw_theme = _bundle_text(bundle_root, brand_reference)
+        if not isinstance(json.loads(raw_theme), dict):
+            raise ValueError
+    except (json.JSONDecodeError, ValueError) as error:
+        raise ValueError(
+            "Northstar Brand theme reference must be a valid UTF-8 JSON object"
+        ) from error
     return NorthstarBundle(bundle_root, manifest, documents)
 
 

@@ -144,7 +144,10 @@ health, one-shot migration completion, then API startup.
 
 Repository-owned content has three explicit lifecycles. `products/knowledge/content/default` is the packaged
 canonical built-in Skill bundle, with executable documents at `<slug>/SKILL.md` and optional
-validated references. `products/knowledge/examples/northstar` is a packaged, text-only fictional example whose
+validated references. The six-Skill default bundle includes an agent-facing Brand Skill whose
+data-only `theme.json` reference is validated against the shared brand contract; references remain
+package assets rather than persisted entities or frontend configuration.
+`products/knowledge/examples/northstar` is a packaged, text-only fictional example whose
 manifest drives the explicit idempotent database seed while retaining immutable history and
 stable UUIDs. `products/knowledge/tests/fixtures/dummy` is provider-neutral content-only test data and is neither
 a production default nor a database seed.

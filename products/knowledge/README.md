@@ -10,7 +10,7 @@ authorization-safe hybrid search slices plus a read-only Next.js enterprise cons
 access-filtered provenance and regenerable PageVersion chunks. Shared application services expose equivalent create/read and search
 operations through FastAPI and FastMCP, and a deterministic Northstar seed demonstrates
 versioned synthetic knowledge. It also stores validated immutable Skills, exposes bounded
-authorized inventories, and explicitly seeds five repository-owned defaults. Search, chunks,
+authorized inventories, and explicitly seeds six repository-owned defaults. Search, chunks,
 embeddings, document retrieval/parsing, and production identity integration remain target state.
 
 The console provides local sign-in, three-pane Page/content/provenance browsing, Skills and
@@ -685,7 +685,11 @@ content/default/
     ├── ingest/SKILL.md
     ├── retrieve/SKILL.md
     ├── update/SKILL.md
-    └── lint/SKILL.md
+    ├── lint/SKILL.md
+    └── brand/
+        ├── SKILL.md
+        └── references/
+            └── theme.json
 ```
 
 Each Skill uses the conventional `<slug>/SKILL.md` layout. `SKILL.md` is the exact executable
@@ -709,6 +713,12 @@ The version-one bundle has these responsibilities:
   operations Knowledge actually exposes;
 * `update` governs immutable version creation and stale-write handling;
 * `lint` audits Skill routing and knowledge quality without mutating by default.
+* `brand` guides generated content toward the default AI Ecosystem visual identity and carries a
+  data-only semantic palette reference validated against `@ai-ecosystem/brand`.
+
+Structured references remain packaged bundle assets and are not persisted as SkillVersion fields
+or exposed through a public reference-file API. Frontends use their compiled local palettes and do
+not load themes from Knowledge or require a seed.
 
 Future repository-owned canonical Skills should cover PDF and PowerPoint extraction, SharePoint
 source retrieval and ingestion, and public web search/research. Document Skills should specify
@@ -1408,7 +1418,9 @@ examples/northstar/
 │       ├── orion-operating-update.md
 │       └── orion-committee-notes.md
 ├── skills/
-│   ├── brand/SKILL.md
+│   ├── brand/
+│   │   ├── SKILL.md
+│   │   └── references/theme.json
 │   └── voice/SKILL.md
 └── seed/
     └── manifest.yaml
@@ -1421,7 +1433,9 @@ special-purpose HR schema.
 
 The seed manifest owns stable identity keys, relationships, ordering, provenance, and paths
 to exact source/PageVersion Markdown. `knowledge-seed-northstar` consumes it deterministically;
-the example Skills are illustrative content and are not inserted as production defaults.
+the example Skills are illustrative content and are not inserted as production defaults. The
+Northstar Brand Skill's data-only theme reference is explicitly synthetic and is checked against
+the Knowledge-owned compiled Northstar palette.
 Binary assets remain deferred until their generation, licensing, storage, and delivery
 contract is explicit.
 

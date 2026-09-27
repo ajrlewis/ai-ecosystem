@@ -13,5 +13,6 @@ tools: []
 
 # Northstar brand
 
-Use a restrained navy and warm-grey palette. This example is synthetic and has no binary
-brand assets.
+Use a restrained navy and warm-grey palette. The synthetic semantic palette is supporting bundle
+data in `references/theme.json`; it is not currently retrievable through a public Knowledge tool.
+This example has no binary brand assets.

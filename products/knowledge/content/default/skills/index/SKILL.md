@@ -32,6 +32,10 @@ routes:
     purpose: Audit Skills and knowledge structure.
     inputs: [scope]
     tools: [list_skills, get_skill_by_slug, list_pages, get_page, get_page_by_path, list_sources, get_source]
+  brand:
+    purpose: Apply the default AI Ecosystem visual identity to generated content.
+    inputs: [content]
+    tools: []
 ---
 
 # Skill index
@@ -45,6 +49,7 @@ only a routing contract; it does not duplicate the routed instructions.
 | Navigate and read governed knowledge | `retrieve` | `request` | `list_pages`, `get_page`, `get_page_by_path`, `get_source` |
 | Propose and publish a reviewed correction | `update` | `page_id`, `content_markdown`, `expected_current_version_id`, `approved` | `get_page`, `create_page_version` |
 | Audit Skills and knowledge structure | `lint` | `scope` | `list_skills`, `get_skill_by_slug`, `list_pages`, `get_page`, `get_page_by_path`, `list_sources`, `get_source` |
+| Apply the default AI Ecosystem visual identity | `brand` | `content` | None |
 
 If no route matches, return that the capability is unavailable. Do not invent a tool or
 silently substitute a write workflow.

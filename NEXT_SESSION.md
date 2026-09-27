@@ -2,62 +2,59 @@
 
 ## Status — 2026-09-27
 
-The repository and product rename is complete and merged. The GitHub repository is now
-`ajrlewis/ai-ecosystem`, the local `origin` points to the renamed repository, and the workspace
-consistently uses AI Ecosystem, Knowledge, and Agent across product directories, packages,
-services, configuration, contracts, tests, and current documentation. The local checkout directory
-is still named `mind`; changing it is a separate host-local operation and is not required for this
-session.
+The shared frontend brand foundation is implemented and merged in pull request #36. The root
+`@ai-ecosystem/brand` package now owns the Zod-validated semantic colour contract, compiled default
+AI Ecosystem palette, deterministic CSS custom-property mapping, and minimal global stylesheet.
+Knowledge and Agent consume it directly; Knowledge retains its optional fictional Northstar
+palette and runtime selection, while Agent uses the dependency-free compiled default.
 
-Knowledge and Agent remain independently deployable peer products with separate application code,
-state, migrations, and deployment lifecycles. Agent continues to consume Knowledge only through
-its public HTTP interfaces.
+The next logical slice is to align agent-facing brand guidance with that authoritative UI contract.
+Knowledge already contains a fictional Northstar Brand Skill at
+`products/knowledge/examples/northstar/skills/brand/SKILL.md`, but the repository-owned default
+Skill bundle has no Brand Skill. Neither Brand Skill has a structured `theme.json` reference, so
+agents receive prose-only guidance and there is no automated drift check between agent-facing
+theme data and the compiled palettes.
 
-The next incremental architecture step is the shared frontend brand foundation. The current
-applications still implement that foundation separately:
-
-- Knowledge defines a validated semantic theme contract plus `knowledge` and `northstar` palettes
-  in `products/knowledge/apps/web/lib/theme.ts`, then applies the tokens through CSS custom
-  properties.
-- Agent hard-codes a separate dark palette, typography, focus treatment, surfaces, borders, and
-  controls in `products/agent/apps/web/app/styles.css`.
-- Both applications duplicate Inter/Georgia typography and related global presentation rules.
-- No root frontend package is currently included in the npm workspace.
+The existing default bundle loader already supports declared files below a Skill's `references/`
+directory, validates bundle boundaries, packages those references into the Knowledge database
+distribution, and preserves deployed current Skill versions. Use those conventions rather than
+adding another content lifecycle or making frontend rendering depend on Knowledge.
 
 ## Objective
 
-Create a neutral shared brand package and make both product web applications consume the same
-validated semantic theme foundation so they look and behave like parts of one AI Ecosystem while
-retaining their distinct product workflows and layouts.
+Add a repository-owned default Brand Skill and structured theme references for both the default AI
+Ecosystem brand and the fictional Northstar example. Validate the references against the shared
+semantic theme contract and prevent them from drifting from the compiled palettes.
 
-The intended initial package is:
-
-```text
-packages/
-└── brand/
-    ├── package.json
-    └── src/
-        ├── index.ts
-        └── foundation.css
-```
-
-Suggested package name:
-
-```text
-@ai-ecosystem/brand
-```
-
-Use the existing Knowledge theme contract as the starting point rather than inventing a second
-contract. Move only stable, genuinely shared presentation foundations into the root package.
+This is a content, validation, and packaging slice. It must not turn Skills into runtime frontend
+configuration or introduce a database-backed theme service.
 
 ## Required outcome
 
-### Shared semantic theme contract
+### Default Brand Skill
 
-- Move the Zod-validated semantic token contract, `ThemeTokens` type, safe-colour validation, CSS
-  custom-property conversion, and compiled default AI Ecosystem palette into
-  `@ai-ecosystem/brand`.
-- Keep token names semantic rather than product- or component-specific. The current baseline is:
+- Add the conventional bundle directory:
+
+  ```text
+  products/knowledge/content/default/skills/brand/
+  ├── SKILL.md
+  └── references/
+      └── theme.json
+  ```
+
+- Make `brand` a sixth canonical default Skill in
+  `products/knowledge/content/default/manifest.yaml`, with a stable name and ordered position.
+- Update the default `index` Skill's frontmatter route contract and Markdown routing table so the
+  Brand Skill is reachable by stable slug.
+- Keep the Skill focused on applying the default visual identity to generated content. Mention the
+  structured reference as supporting bundle data without claiming it is currently retrievable
+  through a public tool, and do not claim capabilities that Knowledge does not expose.
+- Preserve the existing idempotent seed behavior: create the new Skill where absent, preserve every
+  already-deployed current Skill version, and do not silently upgrade customized deployments.
+
+### Structured theme references
+
+- Add a UTF-8 JSON object containing exactly the current semantic tokens:
 
   ```text
   primary
@@ -73,138 +70,122 @@ contract. Move only stable, genuinely shared presentation foundations into the r
   danger
   ```
 
-- Add tokens only when both products demonstrably need them. Avoid speculative theme systems,
-  arbitrary user-provided CSS, or component-specific colour names.
-- Preserve strict validation before values become inline CSS custom properties. Do not weaken the
-  current protection against unsafe CSS values.
-- Export a built-in default theme so every product renders correctly without Knowledge, a seeded
-  database, an API request, or runtime theme configuration.
+- The default `theme.json` values must exactly equal `defaultTheme` from
+  `@ai-ecosystem/brand`.
+- Add the corresponding fictional reference at:
 
-### Shared visual foundation
+  ```text
+  products/knowledge/examples/northstar/skills/brand/references/theme.json
+  ```
 
-- Add a small shared stylesheet for the genuinely common global layer: box sizing, typography,
-  body defaults, semantic background/text colours, links, focus-visible treatment, skip-link
-  behavior, and reusable low-level control/surface conventions where both products already need
-  them.
-- Both applications should consume the same default palette, font stacks, focus treatment,
-  surfaces, borders, and status colours.
-- Preserve accessible contrast, keyboard focus visibility, reduced layout shift, responsive
-  behavior, and inert rendering of untrusted content.
-- Do not force both applications into the same information architecture. Knowledge remains a
-  read-only knowledge console; Agent remains a conversation workspace.
+- The Northstar reference must exactly equal Knowledge's current `themes.northstar` palette and
+  remain explicitly synthetic.
+- Keep JSON data-only: no CSS declarations, custom-property names, selectors, URLs, scripts,
+  comments, or arbitrary extension fields.
+- Do not place Northstar values in `@ai-ecosystem/brand`; the example remains Knowledge-owned.
 
-### Product integration
+### Validation and drift protection
 
-- Add `packages/*` to the root npm workspaces and update the lockfile from authoritative package
-  manifests.
-- Add `@ai-ecosystem/brand` as a workspace dependency of both
-  `@ai-ecosystem/knowledge-web` and `@ai-ecosystem/agent-web`.
-- Replace Knowledge's product-local theme contract with imports from the shared package. Keep only
-  product integration or selection behavior in the Knowledge application.
-- Replace Agent's hard-coded colour values with the shared semantic CSS variables and apply the
-  compiled default theme at its root layout boundary.
-- Keep product-specific component selectors and layout rules in their owning applications. Do not
-  move conversation, evidence, page, navigation, shell, or sign-in components into the shared
-  package merely because their colours become consistent.
-- Keep server-only credentials and session handling unchanged. Theme selection must not introduce
-  a backend dependency or expose configuration to the browser unnecessarily.
+- Reuse `themeTokens` from `@ai-ecosystem/brand` as the authoritative validation contract. Do not
+  copy the Zod schema into Knowledge, Python, or another package.
+- Add focused TypeScript tests that parse both JSON references through `themeTokens`, reject extra
+  or unsafe values, and assert exact equality with their compiled palettes.
+- If JSON module imports make the public package boundary clearer, enable them only in the smallest
+  relevant TypeScript configuration. Do not publish the example palette from the brand package.
+- Extend the default bundle tests and loader invariants for the sixth canonical Skill, declared
+  reference, index reachability, content hashes, and packaged-wheel behavior.
+- Extend Northstar bundle validation so its Brand Skill reference must exist, remain inside the
+  example bundle, and be valid UTF-8 JSON. Avoid copying the semantic keys or colour regex into
+  Python; cross-language code should validate safe file structure and leave the authoritative
+  palette semantics to the shared Zod contract.
+- Keep failures explicit for missing, malformed, undeclared, traversal, unsafe, extra-key, and
+  palette-drift cases.
 
-### Theme selection and examples
+### Content lifecycle and product boundaries
 
-- Retain Knowledge's current theme-selection behavior unless a small neutral shared helper can be
-  reused without coupling products.
-- Treat Northstar as an optional fictional example theme, not the ecosystem default, product name,
-  or tenant abstraction.
-- It is acceptable for the Northstar palette to remain Knowledge-owned in this slice if sharing it
-  would make example content a required dependency of Agent.
-- Agent should use the compiled default ecosystem theme in this session. Cross-application
-  persistence or synchronization of a user's selected example theme is not required.
+- `packages/brand` remains the authority for the compiled default theme and semantic token
+  validation.
+- Knowledge owns default and example Skill documents, reference packaging, seed behavior, and the
+  optional Northstar palette.
+- Agent may retrieve Brand Skills through Knowledge's existing public interfaces in future work;
+  this session must not add Agent coupling or automatic Skill execution.
+- Frontends must continue rendering from compiled local themes with no Knowledge request, database
+  lookup, seed prerequisite, or remote-provider dependency.
+- Do not add migrations, public APIs, authentication changes, runtime theme selection, or browser
+  access to Skill references.
 
-## Product boundaries to preserve
-
-- `packages/brand` owns only reusable presentation contracts, the compiled default palette, and
-  shared global styling foundations.
-- Knowledge and Agent own their product-specific pages, layouts, components, routes, sessions,
-  accessibility labels, and interaction behavior.
-- The shared package must not import from either product.
-- Neither product may import the other product's frontend internals.
-- Do not introduce shared backend state, migrations, APIs, authorization policy, or deployment
-  coupling.
-- Both product applications must remain independently buildable and deployable.
-
-Dependency direction:
+Dependency direction remains:
 
 ```text
-products/knowledge/apps/web ─┐
-                             ├──> packages/brand
-products/agent/apps/web ─────┘
+products/knowledge default/example content ──validated against──> packages/brand contract
+
+products/knowledge web ─┐
+                        ├──> packages/brand compiled themes
+products/agent web ─────┘
 ```
+
+No dependency may point from `packages/brand` into a product runtime.
 
 ## Testing and documentation
 
-- Move or recreate focused theme-contract tests at the shared package boundary, including valid
-  palettes, rejected unsafe values, deterministic CSS-variable mapping, and the compiled default
-  theme.
-- Update Knowledge tests to cover its remaining theme-selection integration and Northstar
-  override.
-- Update Agent component tests where colours or root theme application have observable semantic
-  behavior; avoid brittle pixel or implementation-detail assertions.
-- Add a drift-style assertion that both product manifests depend on the shared brand package and
-  neither redefines the semantic token contract.
-- Update the root README, relevant product specifications, `.agents/ARCHITECTURE.md`,
-  `.agents/COMMANDS.md`, and `DEFERRED_SESSION.md` to distinguish the implemented shared brand
-  foundation from still-proposed shared UI and frontend-config packages.
-- Review both applications at desktop and narrow viewports. Confirm sign-in, navigation, empty,
-  loading, error, conversation, evidence, page, provenance, search, and Skill views remain usable.
+- Update focused tests in `packages/brand/tests/` and
+  `products/knowledge/tests/unit/test_skill_documents.py`.
+- Update PostgreSQL default-seed expectations from five to six Skills and verify a rerun preserves
+  existing current versions while creating only the missing Brand Skill.
+- Build the Knowledge database wheel and inspect it, or exercise the existing packaged-bundle
+  test, to prove both default Brand files are included.
+- Run the shared brand checks, Python static/unit checks, dependency-backed default-seed coverage,
+  Knowledge web checks affected by the Northstar drift assertion, and Docker build.
+- Update the root README, Knowledge specification, `.agents/ARCHITECTURE.md`,
+  `.agents/COMMANDS.md`, and `DEFERRED_SESSION.md` to describe implemented Brand Skills and leave
+  runtime theme loading explicitly deferred.
+- Do not describe structured Skill references as persisted database entities if they remain
+  packaged bundle assets; document their actual lifecycle precisely.
 
 ## Suggested execution order
 
-1. Inventory duplicated global styles, semantic colours, typography, focus rules, and current theme
-   tests across both applications.
-2. Define the minimal public API and CSS boundary for `@ai-ecosystem/brand`.
-3. Add the root package and npm workspace entry, then regenerate `package-lock.json`.
-4. Move the validated theme contract and default palette from Knowledge into the shared package.
-5. Make Knowledge consume the shared contract without changing its product behavior or Northstar
-   selection semantics.
-6. Make Agent apply the shared default theme and convert its hard-coded palette to semantic
-   variables while preserving its conversation-specific layout.
-7. Add focused shared and product integration tests.
-8. Run each frontend's lint, typecheck, unit tests, contract drift check, and production build;
-   then run the relevant Docker and Playwright flows when the local environment supports them.
-9. Review the final diff for accidental component extraction, frontend cross-imports, unsafe CSS,
-   inaccessible contrast/focus, generated artifacts, and unrelated redesign.
+1. Inventory the default bundle loader, manifest invariants, index routes, packaged-wheel tests,
+   Northstar loader, and all assertions fixed at five Skills.
+2. Define the minimal default Brand Skill contract and exact data-only `theme.json` shape.
+3. Add the default Skill/reference and update the manifest, index route, hashes, and seed tests.
+4. Add the Northstar reference and make its existing Brand Skill point readers to structured theme
+   data without treating the example as an ecosystem default.
+5. Add authoritative Zod validation and exact palette drift tests at the frontend/shared-package
+   boundary.
+6. Add the smallest Python bundle checks needed for safe paths, JSON structure, packaging, and
+   deterministic seed behavior.
+7. Run the relevant canonical checks and inspect the built package/Docker image contents.
+8. Review the diff for duplicated theme contracts, accidental frontend-to-Knowledge coupling,
+   identity churn, automatic upgrades, or claims that references are runtime database state.
 
 ## Definition of done
 
-- A root `@ai-ecosystem/brand` workspace package owns the validated semantic theme contract,
-  deterministic CSS-variable mapping, compiled default palette, and minimal shared global styling.
-- Knowledge and Agent both consume the package directly and no longer maintain competing default
-  colour, typography, focus, surface, or border foundations.
-- Agent has no hard-coded parallel theme palette; product-specific styles use shared semantic
-  variables.
-- Knowledge's optional Northstar theme still works without becoming an Agent or ecosystem
-  dependency.
-- Both products retain their own layouts, components, interaction patterns, state, APIs, and
-  deployment boundaries.
-- Shared-package and product tests cover theme validation, unsafe values, CSS-variable mapping,
-  default application, and Knowledge theme selection.
-- The package lockfile is regenerated and workspace dependency resolution is reproducible.
-- Relevant lint, typecheck, Vitest, contract drift, production build, Docker, and Playwright checks
-  pass, or any confirmed host-toolchain blocker is reported with exact evidence rather than
-  described as a product failure.
-- Documentation and agent context accurately describe the implemented shared brand foundation.
+- The default bundle contains a reachable sixth `brand` Skill with a declared `theme.json`
+  reference and remains valid, deterministic, idempotent, and package-complete.
+- Northstar's existing fictional Brand Skill has its own structured example reference without
+  becoming a dependency of Agent or the ecosystem default.
+- Both reference files validate through the authoritative shared `themeTokens` contract and match
+  their compiled palettes exactly.
+- Unsafe values, missing/extra keys, malformed JSON, path traversal, undeclared files, and palette
+  drift fail focused tests.
+- Existing deployed default Skill versions remain untouched; a rerun creates only genuinely
+  missing defaults.
+- Frontend rendering remains dependency-free and does not read Skills, references, Knowledge, or a
+  database for theme values.
+- Relevant brand, Knowledge Python/web, PostgreSQL seed, packaging, Docker, and drift checks pass,
+  or a confirmed host blocker is reported with exact evidence.
+- Documentation accurately distinguishes compiled UI themes, packaged agent-facing references,
+  and persisted Skill documents.
 
 ## Explicitly deferred
 
-- A general `@ai-ecosystem/ui` component library or extraction of buttons, forms, cards, shells,
-  navigation, tables, messages, composers, or evidence components;
-- `@ai-ecosystem/frontend-config` and shared ESLint, TypeScript, Tailwind, Vitest, or Playwright
-  configuration;
-- adding the default Brand Skill or structured `references/theme.json` files;
-- loading UI themes from Knowledge, Skills, a database, tenant settings, or a remote provider;
-- synchronizing a selected theme across independently deployed products;
-- broader visual redesign, new logos, marketing pages, or product navigation changes;
-- shared backend packages, identity extraction, observability extraction, deployment restructuring,
-  or new products;
-- changing authentication, authorization, persistence, migrations, public APIs, or product
-  capabilities.
+- Loading application themes from Knowledge, Skills, reference files, a database, tenant settings,
+  or a remote provider;
+- exposing Skill reference files through new public HTTP, MCP, or browser contracts;
+- synchronizing theme selection across independently deployed products;
+- a general `@ai-ecosystem/ui` component library;
+- shared frontend configuration for ESLint, TypeScript, Tailwind, Vitest, or Playwright;
+- broader brand assets, logos, binary media, marketing pages, or visual redesign;
+- automatic execution of Brand Skills or changes to the Agent runtime;
+- migrations, authorization changes, production identity, deployment restructuring, or new
+  products.
