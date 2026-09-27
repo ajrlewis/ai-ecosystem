@@ -355,9 +355,16 @@ async def test_knowledge_services_constraints_and_seed() -> None:
         steward_external_subject="northstar-alex",
         audit_external_subject="northstar-cortex",
     )
-    assert set(first_defaults.created) == {"index", "ingest", "retrieve", "update", "lint"}
+    assert set(first_defaults.created) == {"index", "ingest", "retrieve", "update", "lint", "brand"}
     assert second_defaults.created == ()
-    assert set(second_defaults.preserved) == {"index", "ingest", "retrieve", "update", "lint"}
+    assert set(second_defaults.preserved) == {
+        "index",
+        "ingest",
+        "retrieve",
+        "update",
+        "lint",
+        "brand",
+    }
     with (
         psycopg.connect(database_url, autocommit=True) as connection,
         connection.cursor() as cursor,
@@ -367,9 +374,9 @@ async def test_knowledge_services_constraints_and_seed() -> None:
         cursor.execute("SELECT count(*) FROM page_versions")
         assert cursor.fetchone() == (5,)
         cursor.execute("SELECT count(*) FROM skills")
-        assert cursor.fetchone() == (5,)
+        assert cursor.fetchone() == (6,)
         cursor.execute("SELECT count(*) FROM skill_versions")
-        assert cursor.fetchone() == (5,)
+        assert cursor.fetchone() == (6,)
         with pytest.raises(RaiseException):
             cursor.execute(
                 "UPDATE folders SET deleted_at = now() WHERE id = %s",
