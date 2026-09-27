@@ -1,4 +1,24 @@
-# Next Session
+# Brand Skills and Structured Theme References
+
+- Status: completed
+- Completed: 2026-09-27
+- Pull request: #37
+- Merged commit: `ec22955`
+
+## Outcome
+
+Added the sixth repository-owned default Brand Skill, default and synthetic Northstar structured
+theme references, authoritative semantic validation and drift protection, safe bundle validation,
+deterministic seed coverage, package inclusion, and lifecycle documentation. Frontends continue to
+use compiled local themes without a Knowledge runtime dependency.
+
+## Verification outcome
+
+The merged pull request passed the repository's quality, web, and Docker CI jobs. The default-seed
+PostgreSQL coverage verifies initial creation, preservation on rerun, and creation of only a missing
+Brand Skill.
+
+## Original brief
 
 ## Status — 2026-09-27
 

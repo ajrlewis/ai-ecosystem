@@ -7,12 +7,32 @@ implemented or proposed commands as verified.
 
 ## Change Loop
 
-1. Read the relevant product specification, current implementation, tests, and agent guidance.
+1. Read the relevant product specification, current implementation, tests, agent guidance, and
+   `.agents/sessions/ACTIVE.md` when the request invokes the active handoff. Confirm that the brief
+   still describes unfinished work; current code and durable architecture win if it has drifted.
 2. Preserve Knowledge's agent-agnostic storage boundary and make the smallest change that satisfies the task.
 3. Add or update focused tests for changed behavior, including failure and authorization paths where relevant.
 4. Run the relevant verified commands from `.agents/COMMANDS.md`.
 5. Review the diff for scope, secrets, generated files, migrations, and documentation accuracy.
-6. Update agent context only when durable project facts change. Record persistent out-of-scope setup work in `.agents/todos/TODO.md` and archive completed entries in `DONE.md`.
+6. Update agent context when durable project facts change. If the active session is completed,
+   archive its brief with the completion date, pull request, merged commit when known, and
+   verification outcome. Replace `ACTIVE.md` with the next explicitly selected slice or state that
+   no active objective is selected; never promote deferred work implicitly.
+7. Reconcile `.agents/sessions/DEFERRED.md`, record persistent out-of-scope setup work in
+   `.agents/todos/TODO.md`, and archive completed TODO entries in `DONE.md`.
+
+## Session Lifecycle
+
+- The monorepo has exactly one active implementation handoff at
+  `.agents/sessions/ACTIVE.md`, even when its scope is a single product.
+- Durable product rules belong in product specifications or nested `AGENTS.md` files, not in a
+  second active-session document.
+- `.agents/sessions/DEFERRED.md` is planning input, not implementation authorization.
+- `.agents/sessions/archive/` preserves completed briefs as historical evidence. Archived content
+  cannot override current source, specifications, architecture, or the active brief.
+- Prefer advancing the handoff in the implementation pull request so merged `main` remains
+  truthful. When the next priority is not selected, explicitly record that state rather than
+  inventing a roadmap item.
 
 ## Python And TypeScript Changes
 
