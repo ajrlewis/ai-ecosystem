@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { defaultTheme, themeStyle, themeTokens } from "../src/index";
+import { themes } from "../../../products/knowledge/apps/web/lib/theme";
 
 describe("shared semantic theme", () => {
   it("compiles a complete safe default palette", () => {
@@ -49,6 +50,31 @@ describe("shared semantic theme", () => {
 
 describe("brand workspace integration", () => {
   const root = resolve(import.meta.dirname, "../../..");
+
+  it.each([
+    [
+      "default",
+      "products/knowledge/content/default/skills/brand/references/theme.json",
+      defaultTheme,
+    ],
+    [
+      "Northstar",
+      "products/knowledge/examples/northstar/skills/brand/references/theme.json",
+      themes.northstar,
+    ],
+  ])("validates the %s Skill theme and prevents palette drift", (_, path, palette) => {
+    const reference: unknown = JSON.parse(readFileSync(resolve(root, path), "utf8"));
+    expect(themeTokens.parse(reference)).toEqual(palette);
+  });
+
+  it("rejects incomplete, unsafe, and extended Skill theme data", () => {
+    const { danger: _, ...incomplete } = defaultTheme;
+    expect(() => themeTokens.parse(incomplete)).toThrow();
+    expect(() =>
+      themeTokens.parse({ ...defaultTheme, primary: "url(javascript:x)" }),
+    ).toThrow("unsafe CSS colour");
+    expect(() => themeTokens.parse({ ...defaultTheme, logo: "https://example.test" })).toThrow();
+  });
 
   it.each(["knowledge", "agent"])(
     "%s web depends on the shared brand package",

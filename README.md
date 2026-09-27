@@ -45,6 +45,11 @@ Knowledge keeps its optional Northstar example theme and runtime selection; Agen
 dependency-free compiled default. Shared UI components and frontend tooling configuration remain
 deferred.
 
+Knowledge also packages a default Brand Skill and a synthetic Northstar Brand Skill with data-only
+`theme.json` references. Tests validate those agent-facing references against the shared semantic
+contract and compiled palettes. They are bundle assets rather than database entities or runtime UI
+configuration; both frontends continue to render from compiled local themes.
+
 `NEXT_SESSION.md` describes the single active implementation handoff. Optional follow-on
 architecture work is sequenced separately in `DEFERRED_SESSION.md`.
 

@@ -26,19 +26,31 @@ tools: []
 def test_default_bundle_is_complete_reachable_and_uses_available_tools() -> None:
     bundle = load_default_bundle()
 
-    assert [skill.slug for skill in bundle] == ["index", "ingest", "retrieve", "update", "lint"]
+    assert [skill.slug for skill in bundle] == [
+        "index",
+        "ingest",
+        "retrieve",
+        "update",
+        "lint",
+        "brand",
+    ]
     assert all(len(skill.content_hash) == 64 for skill in bundle)
     assert [skill.content_hash for skill in bundle] == [
-        "1ec7f6941533d28dcf1cbf576e4a88626f01136b2a8e0d062762b218df88ab62",
+        "4e09217ce2d521431219be3227b435f56b059d117df2027d38f502c217db206e",
         "f536c1b40f130f24ca8a6e6accc1dabe1f2a1fdbfd92318a118490c5df98c7c9",
         "dd98f6141321cf08fe663fe230df7a0f2ce5c2c5727fb9ea8105d73210e2e737",
         "2e9d15d279747b0d497d67ae3a320e31ba1a848a82452e135446be74031a843d",
         "35e06f881de1824b0068ad475a3961735aa411619748eb3b53dd9e122ce639fe",
+        "01ff0915fbf34965d03f49e7c7f08462a390fdd21d2ad4658ff2f5e36b12c73b",
     ]
     assert [reference.path for reference in bundle[0].references] == [
         "skills/index/references/governance.md"
     ]
     assert len(bundle[0].references[0].content_hash) == 64
+    assert [reference.path for reference in bundle[-1].references] == [
+        "skills/brand/references/theme.json"
+    ]
+    assert len(bundle[-1].references[0].content_hash) == 64
 
 
 @pytest.mark.parametrize(
@@ -107,6 +119,35 @@ def test_default_bundle_rejects_malformed_manifest_and_undeclared_traversal(
         load_default_bundle(traversed)
 
 
+def test_default_bundle_rejects_missing_malformed_and_traversing_json_references(
+    tmp_path: Path,
+) -> None:
+    source = Path(__file__).resolve().parents[2] / "content" / "default"
+
+    missing = tmp_path / "missing"
+    copytree(source, missing)
+    (missing / "skills" / "brand" / "references" / "theme.json").unlink()
+    with pytest.raises(ValueError, match="does not exist"):
+        load_default_bundle(missing)
+
+    malformed = tmp_path / "malformed-json"
+    copytree(source, malformed)
+    (malformed / "skills" / "brand" / "references" / "theme.json").write_text("{")
+    with pytest.raises(ValueError, match="UTF-8 object"):
+        load_default_bundle(malformed)
+
+    traversed = tmp_path / "reference-traversal"
+    copytree(source, traversed)
+    manifest = traversed / "manifest.yaml"
+    manifest.write_text(
+        manifest.read_text().replace(
+            "skills/brand/references/theme.json", "skills/brand/references/../../index/SKILL.md"
+        )
+    )
+    with pytest.raises(ValueError, match="outside its references"):
+        load_default_bundle(traversed)
+
+
 def test_northstar_bundle_resolves_reviewable_text_and_rejects_bad_references(
     tmp_path: Path,
 ) -> None:
@@ -124,6 +165,7 @@ def test_northstar_bundle_resolves_reviewable_text_and_rejects_bad_references(
         "principal:alex",
         "principal:morgan",
     }
+    assert (bundle.root / "skills" / "brand" / "references" / "theme.json").is_file()
 
     source = Path(__file__).resolve().parents[2] / "examples" / "northstar"
     broken = tmp_path / "northstar"
@@ -132,6 +174,12 @@ def test_northstar_bundle_resolves_reviewable_text_and_rejects_bad_references(
     manifest.write_text(manifest.read_text().replace("folder:people", "folder:missing", 1))
     with pytest.raises(ValueError, match="does not resolve"):
         load_northstar_bundle(broken)
+
+    malformed_theme = tmp_path / "malformed-theme"
+    copytree(source, malformed_theme)
+    (malformed_theme / "skills" / "brand" / "references" / "theme.json").write_text("[]")
+    with pytest.raises(ValueError, match="valid UTF-8 JSON object"):
+        load_northstar_bundle(malformed_theme)
 
 
 def test_dummy_fixture_is_content_only_and_provider_neutral() -> None:

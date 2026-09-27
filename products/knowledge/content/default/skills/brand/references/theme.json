@@ -1,0 +1,13 @@
+{
+  "primary": "#334155",
+  "accent": "#0f766e",
+  "surface": "#f8fafc",
+  "surfaceRaised": "#ffffff",
+  "text": "#0f172a",
+  "textMuted": "#475569",
+  "border": "#cbd5e1",
+  "focus": "#2563eb",
+  "success": "#15803d",
+  "warning": "#a16207",
+  "danger": "#b91c1c"
+}

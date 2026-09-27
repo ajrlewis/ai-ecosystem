@@ -113,8 +113,10 @@ DATABASE_URL=postgresql+psycopg://knowledge:knowledge@localhost:5432/knowledge \
 ```
 
 Add `--review` to print a read-only unified diff between bundled and deployed current
-`SKILL.md` documents before proposing a bundled upgrade. The conventional Skill directories
-and supporting references are included in the `knowledge-db` wheel and Docker build.
+`SKILL.md` documents before proposing a bundled upgrade. The conventional six-Skill directories,
+including the default Brand Skill and structured theme reference, and the synthetic Northstar
+Brand reference are included in the `knowledge-db` wheel and Docker build. These references are
+packaged assets, not database rows or runtime frontend inputs.
 
 ## Quality
 

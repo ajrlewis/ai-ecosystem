@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 from dataclasses import dataclass
 from difflib import unified_diff
@@ -160,7 +161,20 @@ def load_default_bundle(root: Path | None = None) -> tuple[DefaultSkill, ...]:
             if not reference.startswith(expected_reference_root):
                 raise ValueError(f"Default Skill '{slug}' reference is outside its references/")
             reference_path = _bundle_file(bundle_root, reference, "Default Skill reference")
-            references.append(BundleReference(reference, reference_path.read_bytes()))
+            reference_root = (bundle_root / expected_reference_root).resolve()
+            if not reference_path.is_relative_to(reference_root):
+                raise ValueError(f"Default Skill '{slug}' reference is outside its references/")
+            content = reference_path.read_bytes()
+            if reference_path.suffix == ".json":
+                try:
+                    decoded = content.decode("utf-8")
+                    if not isinstance(json.loads(decoded), dict):
+                        raise ValueError
+                except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as error:
+                    raise ValueError(
+                        f"Default Skill '{slug}' JSON reference must be a UTF-8 object"
+                    ) from error
+            references.append(BundleReference(reference, content))
         if len({reference.path for reference in references}) != len(references):
             raise ValueError(f"Default Skill '{slug}' contains duplicate references")
         skills.append(DefaultSkill(slug, name, position, markdown, tuple(references)))
@@ -172,6 +186,7 @@ def load_default_bundle(root: Path | None = None) -> tuple[DefaultSkill, ...]:
         "retrieve",
         "update",
         "lint",
+        "brand",
     }:
         raise ValueError("Default Skill manifest must define each canonical Skill exactly once")
     positions = [skill.position for skill in skills]

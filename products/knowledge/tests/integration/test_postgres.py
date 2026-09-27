@@ -355,9 +355,16 @@ async def test_knowledge_services_constraints_and_seed() -> None:
         steward_external_subject="northstar-alex",
         audit_external_subject="northstar-cortex",
     )
-    assert set(first_defaults.created) == {"index", "ingest", "retrieve", "update", "lint"}
+    assert set(first_defaults.created) == {"index", "ingest", "retrieve", "update", "lint", "brand"}
     assert second_defaults.created == ()
-    assert set(second_defaults.preserved) == {"index", "ingest", "retrieve", "update", "lint"}
+    assert set(second_defaults.preserved) == {
+        "index",
+        "ingest",
+        "retrieve",
+        "update",
+        "lint",
+        "brand",
+    }
     with (
         psycopg.connect(database_url, autocommit=True) as connection,
         connection.cursor() as cursor,
@@ -367,9 +374,9 @@ async def test_knowledge_services_constraints_and_seed() -> None:
         cursor.execute("SELECT count(*) FROM page_versions")
         assert cursor.fetchone() == (5,)
         cursor.execute("SELECT count(*) FROM skills")
-        assert cursor.fetchone() == (5,)
+        assert cursor.fetchone() == (6,)
         cursor.execute("SELECT count(*) FROM skill_versions")
-        assert cursor.fetchone() == (5,)
+        assert cursor.fetchone() == (6,)
         with pytest.raises(RaiseException):
             cursor.execute(
                 "UPDATE folders SET deleted_at = now() WHERE id = %s",
@@ -389,13 +396,44 @@ async def test_skill_service_constraints_stale_writes_and_local_seed_divergence(
     ):
         cursor.execute("TRUNCATE organizations CASCADE")
     seed_northstar(sqlalchemy_url)
-    seed_defaults(
+    first_seed = seed_defaults(
         sqlalchemy_url,
         organization_slug="northstar",
         policy_name="Northstar organization-wide",
         steward_external_subject="northstar-alex",
         audit_external_subject="northstar-cortex",
     )
+    assert first_seed.created == ("index", "ingest", "retrieve", "update", "lint", "brand")
+    assert first_seed.preserved == ()
+    with (
+        psycopg.connect(database_url) as connection,
+        connection.cursor() as cursor,
+    ):
+        cursor.execute(
+            "UPDATE skills SET current_version_id = NULL "
+            "WHERE organization_id = %s AND slug = 'brand'",
+            (northstar_id("organization:northstar"),),
+        )
+        cursor.execute("ALTER TABLE skill_versions DISABLE TRIGGER skill_versions_immutable")
+        cursor.execute(
+            "DELETE FROM skill_versions WHERE organization_id = %s AND skill_id IN "
+            "(SELECT id FROM skills WHERE organization_id = %s AND slug = 'brand')",
+            (northstar_id("organization:northstar"), northstar_id("organization:northstar")),
+        )
+        cursor.execute(
+            "DELETE FROM skills WHERE organization_id = %s AND slug = 'brand'",
+            (northstar_id("organization:northstar"),),
+        )
+        cursor.execute("ALTER TABLE skill_versions ENABLE TRIGGER skill_versions_immutable")
+    repaired_seed = seed_defaults(
+        sqlalchemy_url,
+        organization_slug="northstar",
+        policy_name="Northstar organization-wide",
+        steward_external_subject="northstar-alex",
+        audit_external_subject="northstar-cortex",
+    )
+    assert repaired_seed.created == ("brand",)
+    assert repaired_seed.preserved == ("index", "ingest", "retrieve", "update", "lint")
     organization = northstar_id("organization:northstar")
     principal = northstar_id("principal:alex")
     policy = northstar_id("policy:organization-wide")

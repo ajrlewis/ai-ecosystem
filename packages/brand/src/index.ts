@@ -19,7 +19,7 @@ export const themeTokens = z.object({
   success: safeColor,
   warning: safeColor,
   danger: safeColor,
-});
+}).strict();
 
 export type ThemeTokens = z.infer<typeof themeTokens>;
 

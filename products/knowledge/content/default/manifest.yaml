@@ -23,3 +23,9 @@ skills:
     name: Lint
     file: skills/lint/SKILL.md
     position: 50
+  - slug: brand
+    name: Brand
+    file: skills/brand/SKILL.md
+    position: 60
+    references:
+      - skills/brand/references/theme.json
