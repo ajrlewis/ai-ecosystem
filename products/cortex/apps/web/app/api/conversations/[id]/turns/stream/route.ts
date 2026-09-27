@@ -12,12 +12,13 @@ const safeError = 'event: error\ndata: {"error":"conversation_error"}\n\n';
 const streamHeaders = { "Content-Type": "text/event-stream", "Cache-Control": "no-cache, no-store", "X-Accel-Buffering": "no" };
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
-  if (!readSession((await cookies()).get(sessionCookie)?.value)) return Response.json({ error: "unauthorized" }, { status: 401 });
+  const assertion = (await cookies()).get(sessionCookie)?.value;
+  if (!readSession(assertion)) return Response.json({ error: "unauthorized" }, { status: 401 });
   let body: unknown; try { body = await request.json(); } catch { return Response.json({ error: "invalid_request" }, { status: 422 }); }
   const parsedRequest = requestSchema.safeParse(body); if (!parsedRequest.success) return Response.json({ error: "invalid_request" }, { status: 422 });
   const { id } = await context.params; const config = env(); const controller = new AbortController(); request.signal.addEventListener("abort", () => controller.abort(), { once: true }); const timeout = setTimeout(() => controller.abort(), 35_000);
   let backend: Response;
-  try { backend = await fetch(`${config.CORTEX_API_URL}/conversations/${encodeURIComponent(id)}/turns/stream`, { method: "POST", cache: "no-store", signal: controller.signal, headers: { Authorization: `Bearer ${config.CORTEX_API_BEARER_TOKEN}`, "Content-Type": "application/json", Accept: "text/event-stream" }, body: JSON.stringify(parsedRequest.data) }); }
+  try { backend = await fetch(`${config.CORTEX_API_URL}/conversations/${encodeURIComponent(id)}/turns/stream`, { method: "POST", cache: "no-store", signal: controller.signal, headers: { Authorization: `Bearer ${config.CORTEX_API_BEARER_TOKEN}`, "X-Mind-Local-Identity": assertion!, "Content-Type": "application/json", Accept: "text/event-stream" }, body: JSON.stringify(parsedRequest.data) }); }
   catch { clearTimeout(timeout); return new Response(safeError, { headers: streamHeaders }); }
   if (!backend.ok || !backend.body || !backend.headers.get("content-type")?.toLowerCase().startsWith("text/event-stream")) { clearTimeout(timeout); controller.abort(); return new Response(safeError, { headers: streamHeaders }); }
   const stream = new ReadableStream<Uint8Array>({

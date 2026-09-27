@@ -1,18 +1,23 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { env } from "./env";
+import { CONVERSATION_ROLE, CORTEX_SCOPE, LocalClaims, localUsers } from "./local-users";
 
 export const sessionCookie = "cortex-session";
 
 function signature(value: string) {
-  return createHmac("sha256", env().CORTEX_WEB_SESSION_SECRET)
+  return createHmac("sha256", env().LOCAL_IDENTITY_SECRET)
     .update(value)
     .digest("base64url");
 }
 
-export function createSession() {
-  const marker = "authenticated";
-  return `${marker}.${signature(marker)}`;
+export function createSession(claims?: LocalClaims) {
+  if (!claims) {
+    const { username: _, password: __, ...defaultClaims } = localUsers()[0];
+    claims = defaultClaims;
+  }
+  const payload = Buffer.from(JSON.stringify(claims)).toString("base64url");
+  return `${payload}.${signature(payload)}`;
 }
 
 export function readSession(value?: string) {
@@ -20,19 +25,18 @@ export function readSession(value?: string) {
   const split = value.lastIndexOf(".");
   if (split < 1) return null;
   const marker = value.slice(0, split);
-  if (marker !== "authenticated") return null;
   const actual = Buffer.from(value.slice(split + 1));
   const expected = Buffer.from(signature(marker));
   return actual.length === expected.length && timingSafeEqual(actual, expected)
-    ? true
+    ? (() => { try { return JSON.parse(Buffer.from(marker, "base64url").toString()) as LocalClaims; } catch { return null; } })()
     : null;
 }
 
 export function validCredentials(user: string, password: string) {
-  const config = env();
-  const actual = Buffer.from(`${user}\0${password}`);
-  const expected = Buffer.from(
-    `${config.CORTEX_WEB_USER}\0${config.CORTEX_WEB_PASSWORD}`,
-  );
-  return actual.length === expected.length && timingSafeEqual(actual, expected);
+  const candidate = localUsers().find((item) => item.username === user);
+  const actual = Buffer.from(password);
+  const expected = Buffer.from(candidate?.password ?? "invalid-local-password");
+  if (actual.length !== expected.length || !timingSafeEqual(actual, expected) || !candidate || !candidate.scopes.includes(CORTEX_SCOPE) || !candidate.roles.includes(CONVERSATION_ROLE)) return null;
+  const { username: _, password: __, ...claims } = candidate;
+  return claims;
 }

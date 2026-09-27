@@ -3,8 +3,8 @@ test("signs in and browses Northstar inventory and detail", async ({
   page,
 }) => {
   await page.goto("/sign-in");
-  await page.getByLabel("Username").fill("brain-admin");
-  await page.getByLabel("Password").fill("brain-local-dev");
+  await page.getByLabel("Username").selectOption("alex");
+  await page.getByLabel("Password").fill("mind-local-dev");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByRole("heading", { name: "Knowledge" })).toBeVisible();
   const first = page.locator("tbody a").first();

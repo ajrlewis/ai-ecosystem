@@ -13,11 +13,12 @@ export async function POST(request: Request) {
   const user = String(form.get("username") ?? "");
   const password = String(form.get("password") ?? "");
   const origin = requestOrigin(request);
-  if (!validCredentials(user, password))
+  const claims = validCredentials(user, password);
+  if (!claims)
     return NextResponse.redirect(new URL("/sign-in?error=credentials", origin), 303);
   const response = NextResponse.redirect(new URL("/conversations", origin), 303);
   const forwardedProtocol = request.headers.get("x-forwarded-proto")?.split(",", 1)[0]?.trim();
-  response.cookies.set(sessionCookie, createSession(), {
+  response.cookies.set(sessionCookie, createSession(claims), {
     httpOnly: true,
     sameSite: "lax",
     secure: forwardedProtocol === "https" || origin.startsWith("https://"),

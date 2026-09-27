@@ -1,3 +1,7 @@
+import base64
+import hashlib
+import hmac
+import json
 from uuid import UUID
 
 import pytest
@@ -21,6 +25,37 @@ def test_local_bearer_authenticator_returns_configured_context() -> None:
     authenticator = LocalBearerAuthenticator(token="local-secret", context=context)
 
     assert authenticator.authenticate("Bearer local-secret") == context
+
+
+def test_local_identity_assertion_returns_provider_neutral_claims_and_rejects_tampering() -> None:
+    claims = {
+        "subject": "northstar-alex",
+        "displayName": "Alex Rowan",
+        "organizationId": str(ORGANIZATION_ID),
+        "principalId": str(PRINCIPAL_ID),
+        "groupIds": [str(GROUP_ID)],
+        "scopes": ["brain.api"],
+        "roles": ["knowledge.steward"],
+    }
+    payload = base64.urlsafe_b64encode(json.dumps(claims).encode()).decode().rstrip("=")
+    signature = (
+        base64.urlsafe_b64encode(
+            hmac.new(b"identity-secret", payload.encode(), hashlib.sha256).digest()
+        )
+        .decode()
+        .rstrip("=")
+    )
+    assertion = f"{payload}.{signature}"
+    authenticator = LocalBearerAuthenticator(
+        token="local-secret", context=AuthContext(ORGANIZATION_ID, PRINCIPAL_ID, frozenset())
+    )
+
+    context = authenticator.authenticate_assertion(assertion, "identity-secret")
+    assert context is not None
+    assert (context.subject, context.display_name) == ("northstar-alex", "Alex Rowan")
+    assert context.scopes == frozenset({"brain.api"})
+    with pytest.raises(AuthenticationError):
+        authenticator.authenticate_assertion(assertion + "x", "identity-secret")
 
 
 @pytest.mark.parametrize(

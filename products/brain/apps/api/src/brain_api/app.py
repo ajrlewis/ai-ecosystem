@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastmcp import FastMCP
 from sqlalchemy.exc import SQLAlchemyError
 
-from brain_api.auth import get_auth_context
+from brain_api.auth import get_auth_context, require_steward
 from brain_auth import AuthContext, AuthorizationDenied, LocalBearerAuthenticator
 from brain_core import (
     DuplicatePageContent,
@@ -107,6 +107,11 @@ def create_app(
     app.state.skill_service = resolved_skill_service
     app.state.search_service = resolved_search_service
     app.state.authenticator = resolved_authenticator
+    app.state.local_identity_secret = (
+        resolved_settings.local_identity_secret.get_secret_value()
+        if resolved_settings.local_identity_secret is not None
+        else None
+    )
     app.state.mcp_server = resolved_mcp_server
 
     @app.get("/health", response_model=HealthResponse, tags=["system"])
@@ -124,7 +129,7 @@ def create_app(
     @app.post("/folders", response_model=FolderResponse, status_code=status.HTTP_201_CREATED)
     async def create_folder(
         request: FolderCreate,
-        context: Annotated[AuthContext, Depends(get_auth_context)],
+        context: Annotated[AuthContext, Depends(require_steward)],
     ) -> FolderResponse:
         return await call_knowledge(resolved_knowledge_service.create_folder, context, request)
 
@@ -138,7 +143,7 @@ def create_app(
     @app.post("/sources", response_model=SourceResponse, status_code=status.HTTP_201_CREATED)
     async def create_source(
         request: SourceCreate,
-        context: Annotated[AuthContext, Depends(get_auth_context)],
+        context: Annotated[AuthContext, Depends(require_steward)],
     ) -> SourceResponse:
         return await call_knowledge(resolved_knowledge_service.create_source, context, request)
 
@@ -158,7 +163,7 @@ def create_app(
     @app.post("/pages", response_model=PageResponse, status_code=status.HTTP_201_CREATED)
     async def create_page(
         request: PageCreate,
-        context: Annotated[AuthContext, Depends(get_auth_context)],
+        context: Annotated[AuthContext, Depends(require_steward)],
     ) -> PageResponse:
         return await call_knowledge(resolved_knowledge_service.create_page, context, request)
 
@@ -190,7 +195,7 @@ def create_app(
     async def create_page_version(
         page_id: UUID,
         request: PageVersionCreate,
-        context: Annotated[AuthContext, Depends(get_auth_context)],
+        context: Annotated[AuthContext, Depends(require_steward)],
     ) -> PageResponse:
         return await call_knowledge(
             resolved_knowledge_service.create_page_version, context, page_id, request
@@ -199,7 +204,7 @@ def create_app(
     @app.post("/skills", response_model=SkillResponse, status_code=status.HTTP_201_CREATED)
     async def create_skill(
         request: SkillCreate,
-        context: Annotated[AuthContext, Depends(get_auth_context)],
+        context: Annotated[AuthContext, Depends(require_steward)],
     ) -> SkillResponse:
         return await call_knowledge(resolved_skill_service.create_skill, context, request)
 
@@ -235,7 +240,7 @@ def create_app(
     async def create_skill_version(
         skill_id: UUID,
         request: SkillVersionCreate,
-        context: Annotated[AuthContext, Depends(get_auth_context)],
+        context: Annotated[AuthContext, Depends(require_steward)],
     ) -> SkillResponse:
         return await call_knowledge(
             resolved_skill_service.create_skill_version, context, skill_id, request

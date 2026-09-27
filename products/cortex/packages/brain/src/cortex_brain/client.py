@@ -46,26 +46,51 @@ class BrainClient:
     async def health(self) -> BrainHealth:
         return await self._get("/health", BrainHealth, authenticated=False)
 
-    async def identity_context(self) -> BrainIdentityContext:
-        return await self._get("/auth/context", BrainIdentityContext, authenticated=True)
-
-    async def search(self, query: str, *, limit: int = 1) -> BrainSearchResponse:
-        return await self._request(
-            "POST", "/search", BrainSearchResponse, json={"query": query, "limit": limit}
+    async def identity_context(
+        self, *, identity_assertion: str | None = None
+    ) -> BrainIdentityContext:
+        return await self._get(
+            "/auth/context",
+            BrainIdentityContext,
+            authenticated=True,
+            identity_assertion=identity_assertion,
         )
 
-    async def get_page(self, page_id: str) -> BrainPage:
-        return await self._get(f"/pages/{page_id}", BrainPage, authenticated=True)
+    async def search(
+        self, query: str, *, limit: int = 1, identity_assertion: str | None = None
+    ) -> BrainSearchResponse:
+        return await self._request(
+            "POST",
+            "/search",
+            BrainSearchResponse,
+            json={"query": query, "limit": limit},
+            identity_assertion=identity_assertion,
+        )
+
+    async def get_page(self, page_id: str, *, identity_assertion: str | None = None) -> BrainPage:
+        return await self._get(
+            f"/pages/{page_id}",
+            BrainPage,
+            authenticated=True,
+            identity_assertion=identity_assertion,
+        )
 
     async def aclose(self) -> None:
         if self._owns_http_client:
             await self._http_client.aclose()
 
     async def _get(
-        self, path: str, model: type[ResponseModel], *, authenticated: bool
+        self,
+        path: str,
+        model: type[ResponseModel],
+        *,
+        authenticated: bool,
+        identity_assertion: str | None = None,
     ) -> ResponseModel:
         headers = {"Authorization": self._authorization} if authenticated else None
-        return await self._request("GET", path, model, headers=headers)
+        return await self._request(
+            "GET", path, model, headers=headers, identity_assertion=identity_assertion
+        )
 
     async def _request(
         self,
@@ -75,9 +100,12 @@ class BrainClient:
         *,
         headers: dict[str, str] | None = None,
         json: dict[str, object] | None = None,
+        identity_assertion: str | None = None,
     ) -> ResponseModel:
         if method == "POST":
             headers = {"Authorization": self._authorization}
+        if identity_assertion is not None:
+            headers = {**(headers or {}), "X-Mind-Local-Identity": identity_assertion}
         try:
             response = await self._http_client.request(method, path, headers=headers, json=json)
         except httpx.TransportError as exc:

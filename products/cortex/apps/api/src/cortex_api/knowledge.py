@@ -58,12 +58,14 @@ class KnowledgeLookupService:
     def __init__(self, brain_client: BrainClient) -> None:
         self._brain_client = brain_client
 
-    async def lookup(self, query: str) -> LookupResponse:
-        search = await self._brain_client.search(query)
+    async def lookup(self, query: str, *, identity_assertion: str | None = None) -> LookupResponse:
+        search = await self._brain_client.search(query, identity_assertion=identity_assertion)
         if not search.results:
             return LookupResponse(result=None)
         hit = search.results[0]
-        page = await self._brain_client.get_page(str(hit.page_id))
+        page = await self._brain_client.get_page(
+            str(hit.page_id), identity_assertion=identity_assertion
+        )
         if page.id != hit.page_id or page.current_version.id != hit.page_version_id:
             raise KnowledgeChanged
         return LookupResponse(
@@ -86,14 +88,20 @@ class KnowledgeAnswerService:
         self._brain_client = brain_client
         self._chat = chat
 
-    async def answer(self, question: str) -> AnswerResponse:
-        search = await self._brain_client.search(question, limit=3)
+    async def answer(
+        self, question: str, *, identity_assertion: str | None = None
+    ) -> AnswerResponse:
+        search = await self._brain_client.search(
+            question, limit=3, identity_assertion=identity_assertion
+        )
         if not search.results:
             return AnswerResponse(result=None)
         references: list[AnswerReference] = []
         contexts: list[str] = []
         for hit in search.results[:3]:
-            page = await self._brain_client.get_page(str(hit.page_id))
+            page = await self._brain_client.get_page(
+                str(hit.page_id), identity_assertion=identity_assertion
+            )
             if page.id != hit.page_id or page.current_version.id != hit.page_version_id:
                 raise KnowledgeChanged
             label = str(len(references) + 1)

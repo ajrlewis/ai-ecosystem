@@ -4,8 +4,8 @@ test("sign in, create, continue, and reopen durable history", async ({ page }) =
   const answer = `Synthetic response to: ${message}`;
   const firstDelta = answer.slice(0, Math.max(1, Math.floor(answer.length / 2)));
   await page.goto("/");
-  await page.getByLabel("Username").fill(process.env.CORTEX_WEB_TEST_USER ?? "cortex-user");
-  await page.getByLabel("Password").fill(process.env.CORTEX_WEB_TEST_PASSWORD ?? "cortex-local-dev");
+  await page.getByLabel("Username").selectOption(process.env.CORTEX_WEB_TEST_USER ?? "alex");
+  await page.getByLabel("Password").fill(process.env.CORTEX_WEB_TEST_PASSWORD ?? "mind-local-dev");
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.getByRole("button", { name: "New conversation" }).click();
   await page.getByLabel("Message Cortex").fill(message);
@@ -26,8 +26,8 @@ test("stopping after a received delta publishes no partial turn", async ({ page 
   const answer = `Synthetic response to: ${message}`;
   const firstDelta = answer.slice(0, Math.max(1, Math.floor(answer.length / 2)));
   await page.goto("/");
-  await page.getByLabel("Username").fill(process.env.CORTEX_WEB_TEST_USER ?? "cortex-user");
-  await page.getByLabel("Password").fill(process.env.CORTEX_WEB_TEST_PASSWORD ?? "cortex-local-dev");
+  await page.getByLabel("Username").selectOption(process.env.CORTEX_WEB_TEST_USER ?? "alex");
+  await page.getByLabel("Password").fill(process.env.CORTEX_WEB_TEST_PASSWORD ?? "mind-local-dev");
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.getByRole("button", { name: "New conversation" }).click();
   await expect(page).toHaveURL(/\/conversations\/[0-9a-f-]+$/);
@@ -47,8 +47,8 @@ test("stopping after a received delta publishes no partial turn", async ({ page 
 
 test("Northstar lookup shows read-only evidence outside conversation history", async ({ page }) => {
   await page.goto("/");
-  await page.getByLabel("Username").fill(process.env.CORTEX_WEB_TEST_USER ?? "cortex-user");
-  await page.getByLabel("Password").fill(process.env.CORTEX_WEB_TEST_PASSWORD ?? "cortex-local-dev");
+  await page.getByLabel("Username").selectOption(process.env.CORTEX_WEB_TEST_USER ?? "alex");
+  await page.getByLabel("Password").fill(process.env.CORTEX_WEB_TEST_PASSWORD ?? "mind-local-dev");
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.getByRole("link", { name: "Knowledge lookup" }).click();
   await page.getByLabel("Search knowledge").fill("Revenue is £45m");

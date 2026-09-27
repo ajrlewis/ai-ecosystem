@@ -35,6 +35,7 @@ services:
       LOCAL_ORGANIZATION_ID: ${LOCAL_ORGANIZATION_ID:-35982da3-60ae-5eea-b46a-088c3cc0f278}
       LOCAL_PRINCIPAL_ID: ${LOCAL_PRINCIPAL_ID:-7f180c45-c2f9-5f9d-b715-bf68f4ced724}
       LOCAL_GROUP_IDS: ${LOCAL_GROUP_IDS:-["8bde0934-4daa-5afa-a9c3-24e849557486"]}
+      LOCAL_IDENTITY_SECRET: ${LOCAL_IDENTITY_SECRET:-mind-local-identity-secret}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
@@ -60,9 +61,7 @@ services:
     environment:
       BRAIN_API_URL: http://brain-api:8000
       LOCAL_BEARER_TOKEN: ${LOCAL_BEARER_TOKEN:-brain-local-dev}
-      LOCAL_WEB_USER: ${LOCAL_WEB_USER:-brain-admin}
-      LOCAL_WEB_PASSWORD: ${LOCAL_WEB_PASSWORD:-brain-local-dev}
-      LOCAL_WEB_SESSION_SECRET: ${LOCAL_WEB_SESSION_SECRET:-brain-local-session-secret}
+      LOCAL_IDENTITY_SECRET: ${LOCAL_IDENTITY_SECRET:-mind-local-identity-secret}
     ports:
       - "${WEB_PORT:-3000}:3000"
     depends_on:
@@ -102,6 +101,7 @@ services:
       CORTEX_DATABASE_URL: postgresql+psycopg://brain:brain@brain-postgres:5432/cortex
       CORTEX_LOCAL_BEARER_TOKEN: ${CORTEX_LOCAL_BEARER_TOKEN:-cortex-local-dev}
       CORTEX_LOCAL_OWNER_ID: ${CORTEX_LOCAL_OWNER_ID:-cortex-local-user}
+      LOCAL_IDENTITY_SECRET: ${LOCAL_IDENTITY_SECRET:-mind-local-identity-secret}
     ports:
       - "${CORTEX_API_PORT:-8100}:8000"
     depends_on:
@@ -155,9 +155,7 @@ services:
     environment:
       CORTEX_API_URL: http://cortex-api:8000
       CORTEX_API_BEARER_TOKEN: ${CORTEX_LOCAL_BEARER_TOKEN:-cortex-local-dev}
-      CORTEX_WEB_USER: ${CORTEX_WEB_USER:-cortex-user}
-      CORTEX_WEB_PASSWORD: ${CORTEX_WEB_PASSWORD:-cortex-local-dev}
-      CORTEX_WEB_SESSION_SECRET: ${CORTEX_WEB_SESSION_SECRET:-cortex-local-session-secret}
+      LOCAL_IDENTITY_SECRET: ${LOCAL_IDENTITY_SECRET:-mind-local-identity-secret}
     ports:
       - "${CORTEX_WEB_PORT:-3100}:3000"
     depends_on:

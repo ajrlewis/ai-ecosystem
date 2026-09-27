@@ -49,11 +49,12 @@ describe("conversation stream proxy", () => {
         method: "POST",
         cache: "no-store",
         body: JSON.stringify({ content: "synthetic content" }),
-        headers: {
+        headers: expect.objectContaining({
           Authorization: "Bearer server-secret",
           "Content-Type": "application/json",
           Accept: "text/event-stream",
-        },
+          "X-Mind-Local-Identity": "signed-session",
+        }),
       }),
     );
   });
