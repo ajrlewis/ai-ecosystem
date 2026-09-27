@@ -3,7 +3,8 @@
 ## Purpose
 
 This file records optional architecture work that is explicitly outside the active handoff in
-`NEXT_SESSION.md`. Items are ordered by dependency and evidence, not committed roadmap dates.
+`ACTIVE.md`. Items are ordered by dependency and evidence, not committed roadmap dates. This file
+is planning input and does not authorize implementation.
 Before implementing an item, create a focused session brief from the current repository state and
 confirm that at least two products need the proposed shared behavior.
 
@@ -53,7 +54,21 @@ a database, tenant settings, or a remote provider as runtime frontend configurat
 explicitly deferred. Frontends should continue to use compiled local themes unless a future brief
 defines lifecycle, authorization, caching, failure, and deployment behavior.
 
-## 4. Other shared implementation packages
+## 4. Governed search Skill
+
+Consider a repository-owned default `search` Skill that teaches Agent to translate user intent into
+authorization-safe hybrid search, inspect high-signal results, retrieve selected current Pages,
+and return evidence with visible provenance. Keep intent interpretation, query reformulation,
+stopping decisions, prompt-injection resistance, uncertainty, and answer synthesis in Agent;
+Knowledge remains the durable authorization and retrieval boundary. The default index should route
+intent-driven discovery to `search` while `retrieve` continues to handle known identities, paths,
+and inventory navigation.
+
+Before promotion, rewrite this as a current bounded brief using the Knowledge and Agent names and
+revalidate the existing search contracts, MCP tools, seed expectations, evaluation coverage, and
+end-to-end boundary. Do not infer implementation authority from this deferred entry.
+
+## 5. Other shared implementation packages
 
 Only extract these after Knowledge and Agent need the same stable behavior:
 
@@ -68,7 +83,7 @@ its own scopes, roles, permissions, and authorization decisions. Product-owned p
 Knowledge search/database code, Agent state, and the Agent-owned Knowledge client remain within
 their products.
 
-## 5. Deployment composition
+## 6. Deployment composition
 
 Product-specific Dockerfiles, runtime configuration, schemas, and migrations remain with their
 products. If multiple deployment targets become real requirements, consider moving composition to:
@@ -83,7 +98,7 @@ deploy/
 Environment composition must not create a shared migration chain or combine product databases.
 Knowledge and Agent must remain independently buildable, deployable, testable, and reversible.
 
-## 6. Repository automation
+## 7. Repository automation
 
 When CI complexity justifies it, split repository automation into focused workflows such as:
 
@@ -97,7 +112,7 @@ When CI complexity justifies it, split repository automation into focused workfl
 
 Repository workflows coordinate product-owned commands; they do not redefine product boundaries.
 
-## 7. Future products
+## 8. Future products
 
 Potential products include analytics, support, integrations, and automation. Add one only when it
 has meaningful independent boundaries, such as its own domain state, deployment lifecycle,

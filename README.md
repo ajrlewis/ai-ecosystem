@@ -50,8 +50,10 @@ Knowledge also packages a default Brand Skill and a synthetic Northstar Brand Sk
 contract and compiled palettes. They are bundle assets rather than database entities or runtime UI
 configuration; both frontends continue to render from compiled local themes.
 
-`NEXT_SESSION.md` describes the single active implementation handoff. Optional follow-on
-architecture work is sequenced separately in `DEFERRED_SESSION.md`.
+`.agents/sessions/ACTIVE.md` is the single workspace-level implementation handoff. Optional
+follow-on work is kept in `.agents/sessions/DEFERRED.md`, and completed briefs are retained under
+`.agents/sessions/archive/`. Product specifications and product-local agent rules may narrow a
+task, but they do not create competing active sessions.
 
 The Compose service keys make product ownership explicit: `knowledge-postgres`, `knowledge-migrate`,
 `knowledge-api`, `knowledge-web`, `agent-db-init`, `agent-migrate`, `agent-api`, and `agent-web`.
