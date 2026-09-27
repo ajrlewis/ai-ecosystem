@@ -24,11 +24,29 @@ products/
     ├── apps/
     ├── tests/
     └── README.md
+packages/
+└── brand/
 ```
 
 Root workspace files coordinate shared development commands and local infrastructure. Product
 implementations, tests, migrations, content, and product-specific documentation remain inside
 their product directory.
+
+Root `packages/` may contain deliberately reusable implementation needed by multiple products.
+Shared packages provide foundations rather than product behavior: they do not own product state,
+database migrations, authorization policy, or deployment lifecycles, and they must not import from
+product internals. Product-specific code remains under `products/`; root deployment and CI files
+only compose and verify those independently deployable products.
+
+`@ai-ecosystem/brand` is the first root shared package. It owns the validated semantic colour
+contract, compiled default AI Ecosystem palette, CSS custom-property mapping, and the small global
+typography, focus, surface, and control foundation consumed directly by both web applications.
+Knowledge keeps its optional Northstar example theme and runtime selection; Agent uses the
+dependency-free compiled default. Shared UI components and frontend tooling configuration remain
+deferred.
+
+`NEXT_SESSION.md` describes the single active implementation handoff. Optional follow-on
+architecture work is sequenced separately in `DEFERRED_SESSION.md`.
 
 The Compose service keys make product ownership explicit: `knowledge-postgres`, `knowledge-migrate`,
 `knowledge-api`, `knowledge-web`, `agent-db-init`, `agent-migrate`, `agent-api`, and `agent-web`.

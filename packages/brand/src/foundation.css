@@ -1,0 +1,77 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  color: var(--text);
+  background: var(--surface);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--text);
+  background: var(--surface);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+h1,
+h2 {
+  font-family: Georgia, serif;
+}
+
+a {
+  color: var(--primary);
+  text-underline-offset: 0.2em;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 0.2rem;
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 10;
+  padding: 0.6rem 1rem;
+  color: var(--surface);
+  background: var(--text);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+.brand-surface {
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+}
+
+.brand-control {
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

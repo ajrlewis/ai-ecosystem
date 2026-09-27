@@ -2,209 +2,209 @@
 
 ## Status — 2026-09-27
 
-The development-only multi-user authentication slice from the previous handoff has been completed
-and merged. The repository is still named `mind`, and its two independently deployable products
-are still named Brain and Cortex throughout directories, packages, imports, services,
-configuration, databases, tests, generated artifacts, documentation, and development credentials.
+The repository and product rename is complete and merged. The GitHub repository is now
+`ajrlewis/ai-ecosystem`, the local `origin` points to the renamed repository, and the workspace
+consistently uses AI Ecosystem, Knowledge, and Agent across product directories, packages,
+services, configuration, contracts, tests, and current documentation. The local checkout directory
+is still named `mind`; changing it is a separate host-local operation and is not required for this
+session.
 
-The naming discussion has converged on a neutral, cloneable ecosystem identity:
+Knowledge and Agent remain independently deployable peer products with separate application code,
+state, migrations, and deployment lifecycles. Agent continues to consume Knowledge only through
+its public HTTP interfaces.
 
-```text
-ai-ecosystem/
-└── products/
-    ├── knowledge/
-    └── agent/
-```
+The next incremental architecture step is the shared frontend brand foundation. The current
+applications still implement that foundation separately:
 
-The broader target architecture for shared packages, future products, deployment composition, and
-branding remains documented separately in `NAMING.md`. This session should perform only the large
-repository and product rename needed to establish that foundation.
+- Knowledge defines a validated semantic theme contract plus `knowledge` and `northstar` palettes
+  in `products/knowledge/apps/web/lib/theme.ts`, then applies the tokens through CSS custom
+  properties.
+- Agent hard-codes a separate dark palette, typography, focus treatment, surfaces, borders, and
+  controls in `products/agent/apps/web/app/styles.css`.
+- Both applications duplicate Inter/Georgia typography and related global presentation rules.
+- No root frontend package is currently included in the npm workspace.
 
 ## Objective
 
-Rename the workspace from Mind to AI Ecosystem, Brain to Knowledge, and Cortex to Agent without
-changing product behavior, weakening product boundaries, or combining their independently owned
-state and deployment lifecycles.
+Create a neutral shared brand package and make both product web applications consume the same
+validated semantic theme foundation so they look and behave like parts of one AI Ecosystem while
+retaining their distinct product workflows and layouts.
 
-The intended mapping is:
-
-```text
-mind             -> ai-ecosystem
-products/brain   -> products/knowledge
-products/cortex  -> products/agent
-Brain            -> Knowledge
-Cortex           -> Agent
-```
-
-Suggested repository description:
-
-> AI Ecosystem is a self-hosted foundation for building enterprise AI products around shared,
-> governed organisational knowledge and reusable agent capabilities.
-
-`ai-ecosystem` is intentionally neutral so another organisation can clone and brand it:
+The intended initial package is:
 
 ```text
-ai-ecosystem        # upstream
-acme-ai-ecosystem   # branded deployment or fork
+packages/
+└── brand/
+    ├── package.json
+    └── src/
+        ├── index.ts
+        └── foundation.css
 ```
+
+Suggested package name:
+
+```text
+@ai-ecosystem/brand
+```
+
+Use the existing Knowledge theme contract as the starting point rather than inventing a second
+contract. Move only stable, genuinely shared presentation foundations into the root package.
+
+## Required outcome
+
+### Shared semantic theme contract
+
+- Move the Zod-validated semantic token contract, `ThemeTokens` type, safe-colour validation, CSS
+  custom-property conversion, and compiled default AI Ecosystem palette into
+  `@ai-ecosystem/brand`.
+- Keep token names semantic rather than product- or component-specific. The current baseline is:
+
+  ```text
+  primary
+  accent
+  surface
+  surfaceRaised
+  text
+  textMuted
+  border
+  focus
+  success
+  warning
+  danger
+  ```
+
+- Add tokens only when both products demonstrably need them. Avoid speculative theme systems,
+  arbitrary user-provided CSS, or component-specific colour names.
+- Preserve strict validation before values become inline CSS custom properties. Do not weaken the
+  current protection against unsafe CSS values.
+- Export a built-in default theme so every product renders correctly without Knowledge, a seeded
+  database, an API request, or runtime theme configuration.
+
+### Shared visual foundation
+
+- Add a small shared stylesheet for the genuinely common global layer: box sizing, typography,
+  body defaults, semantic background/text colours, links, focus-visible treatment, skip-link
+  behavior, and reusable low-level control/surface conventions where both products already need
+  them.
+- Both applications should consume the same default palette, font stacks, focus treatment,
+  surfaces, borders, and status colours.
+- Preserve accessible contrast, keyboard focus visibility, reduced layout shift, responsive
+  behavior, and inert rendering of untrusted content.
+- Do not force both applications into the same information architecture. Knowledge remains a
+  read-only knowledge console; Agent remains a conversation workspace.
+
+### Product integration
+
+- Add `packages/*` to the root npm workspaces and update the lockfile from authoritative package
+  manifests.
+- Add `@ai-ecosystem/brand` as a workspace dependency of both
+  `@ai-ecosystem/knowledge-web` and `@ai-ecosystem/agent-web`.
+- Replace Knowledge's product-local theme contract with imports from the shared package. Keep only
+  product integration or selection behavior in the Knowledge application.
+- Replace Agent's hard-coded colour values with the shared semantic CSS variables and apply the
+  compiled default theme at its root layout boundary.
+- Keep product-specific component selectors and layout rules in their owning applications. Do not
+  move conversation, evidence, page, navigation, shell, or sign-in components into the shared
+  package merely because their colours become consistent.
+- Keep server-only credentials and session handling unchanged. Theme selection must not introduce
+  a backend dependency or expose configuration to the browser unnecessarily.
+
+### Theme selection and examples
+
+- Retain Knowledge's current theme-selection behavior unless a small neutral shared helper can be
+  reused without coupling products.
+- Treat Northstar as an optional fictional example theme, not the ecosystem default, product name,
+  or tenant abstraction.
+- It is acceptable for the Northstar palette to remain Knowledge-owned in this slice if sharing it
+  would make example content a required dependency of Agent.
+- Agent should use the compiled default ecosystem theme in this session. Cross-application
+  persistence or synchronization of a user's selected example theme is not required.
 
 ## Product boundaries to preserve
 
-- **Knowledge** owns durable organisational knowledge, reusable Skills, provenance, access
-  control, versions, and retrieval.
-- **Agent** owns conversations, reasoning, model interaction, tool use, workflows, and execution.
-- Knowledge and Agent remain independently deployable peer products.
-- Agent consumes Knowledge only through public HTTP or MCP interfaces, never through Knowledge's
-  database or internal packages.
-- Agent is one Knowledge consumer. Future products may own specialised agents while consuming the
-  same governed Knowledge and Skills.
-- The rename must not introduce a parent-child structure such as `knowledge/{knowledge,agent}`.
+- `packages/brand` owns only reusable presentation contracts, the compiled default palette, and
+  shared global styling foundations.
+- Knowledge and Agent own their product-specific pages, layouts, components, routes, sessions,
+  accessibility labels, and interaction behavior.
+- The shared package must not import from either product.
+- Neither product may import the other product's frontend internals.
+- Do not introduce shared backend state, migrations, APIs, authorization policy, or deployment
+  coupling.
+- Both product applications must remain independently buildable and deployable.
 
-## Rename inventory
-
-### Repository and directories
-
-- Rename `products/brain` to `products/knowledge` with history-preserving Git moves.
-- Rename `products/cortex` to `products/agent` with history-preserving Git moves.
-- Update root workspace manifests, scripts, ignore rules, Docker build contexts, and documentation
-  paths.
-- Treat the local checkout directory and GitHub repository rename as separate operations. Renaming
-  the remote repository or changing remote settings requires explicit maintainer authorization.
-
-### Python and Node packages
-
-Rename Python distributions, import namespaces, commands, and workspace entries consistently. The
-exact final mapping should be inventoried before edits, but the intended pattern is:
+Dependency direction:
 
 ```text
-brain-*        -> knowledge-*
-brain_*        -> knowledge_*
-cortex-*       -> agent-*
-cortex_*       -> agent_*
-@brain/web     -> @ai-ecosystem/knowledge-web
-@cortex/web    -> @ai-ecosystem/agent-web
+products/knowledge/apps/web ─┐
+                             ├──> packages/brand
+products/agent/apps/web ─────┘
 ```
 
-The current Agent-owned Brain HTTP client should become an Agent-owned Knowledge client, for
-example:
+## Testing and documentation
 
-```text
-products/agent/packages/knowledge-client
-agent-knowledge
-```
-
-Do not create a shared cross-product domain package while renaming it. The client remains owned by
-Agent and depends only on Knowledge's public contract.
-
-### Applications, services, and state
-
-Use explicit product ownership in service and application names:
-
-```text
-knowledge-api
-knowledge-web
-knowledge-mcp
-knowledge-migrate
-knowledge-postgres
-
-agent-api
-agent-web
-agent-migrate
-agent-state
-```
-
-Update Compose service keys, health identities, image targets, executable names, database names,
-migration configuration, test URLs, local seed commands, and dependency diagnostics. Preserve
-separate Knowledge and Agent migration chains and databases.
-
-### Configuration and authentication names
-
-Inventory and rename product-specific environment variables, scopes, roles, cookies, local
-bearers, headers, synthetic subjects, and test credentials. Avoid changing their semantics during
-the rename.
-
-Pay particular attention to names such as:
-
-```text
-BRAIN_*
-CORTEX_*
-brain.api
-cortex.api
-brain-session
-cortex-session
-brain-local-dev
-cortex-local-dev
-```
-
-Provider-neutral names such as `LOCAL_USERS`, `LOCAL_IDENTITY_SECRET`, and the signed local claim
-model should remain neutral when they already describe shared concepts accurately.
-
-### Contracts, generated files, and content
-
-- Update OpenAPI titles, generated Zod validators, checked-in contract paths, and drift scripts.
-- Regenerate `uv.lock`, `package-lock.json`, OpenAPI documents, and generated clients from their
-  authoritative sources; do not hand-edit generated contracts.
-- Update default bundle identities, deterministic UUID namespaces only when identity continuity is
-  explicitly understood, seed commands, fixture paths, and synthetic provenance subjects.
-- Preserve existing database and content identity where a cosmetic rename does not require a new
-  identifier. Avoid silently making idempotent seeds create duplicate entities or versions.
-- Keep Northstar fictional and retain its role as an optional example rather than a product or
-  tenant name.
-
-### Documentation and agent context
-
-Update the root README, both product specifications, access-control and data-model documents,
-architecture guidance, canonical commands, diagrams, examples, and agent-managed context. Search
-for both case-sensitive and case-insensitive remnants of Mind, Brain, and Cortex, then review each
-remaining occurrence deliberately rather than applying an unchecked global replacement.
-
-Historical references may retain old names when changing them would falsify history. Current
-architecture, commands, and product descriptions must use the new names consistently.
+- Move or recreate focused theme-contract tests at the shared package boundary, including valid
+  palettes, rejected unsafe values, deterministic CSS-variable mapping, and the compiled default
+  theme.
+- Update Knowledge tests to cover its remaining theme-selection integration and Northstar
+  override.
+- Update Agent component tests where colours or root theme application have observable semantic
+  behavior; avoid brittle pixel or implementation-detail assertions.
+- Add a drift-style assertion that both product manifests depend on the shared brand package and
+  neither redefines the semantic token contract.
+- Update the root README, relevant product specifications, `.agents/ARCHITECTURE.md`,
+  `.agents/COMMANDS.md`, and `DEFERRED_SESSION.md` to distinguish the implemented shared brand
+  foundation from still-proposed shared UI and frontend-config packages.
+- Review both applications at desktop and narrow viewports. Confirm sign-in, navigation, empty,
+  loading, error, conversation, evidence, page, provenance, search, and Skill views remain usable.
 
 ## Suggested execution order
 
-1. Inventory every current name across tracked files, package metadata, generated artifacts,
-   runtime configuration, persisted identifiers, and remote repository settings.
-2. Define and document the complete old-to-new mapping before changing files.
-3. Create a dedicated rename branch from an up-to-date `main`.
-4. Move the two product directories with `git mv`.
-5. Rename Python distributions, modules, commands, npm workspaces, service names, configuration,
-   database and migration references, authentication names, tests, and documentation.
-6. Regenerate lockfiles and public API contracts using canonical commands.
-7. Run focused checks after each product becomes internally consistent, then run the complete
-   cross-product verification suite.
-8. Search for stale names and classify any intentional historical or compatibility occurrences.
-9. Review the final diff for accidental behavior changes, secrets, identity discontinuity, broken
-   paths, and generated-file drift.
-10. Deliver the rename through a focused pull request. Rename the GitHub repository or local
-    checkout only when separately authorized and at the safest point in the delivery sequence.
+1. Inventory duplicated global styles, semantic colours, typography, focus rules, and current theme
+   tests across both applications.
+2. Define the minimal public API and CSS boundary for `@ai-ecosystem/brand`.
+3. Add the root package and npm workspace entry, then regenerate `package-lock.json`.
+4. Move the validated theme contract and default palette from Knowledge into the shared package.
+5. Make Knowledge consume the shared contract without changing its product behavior or Northstar
+   selection semantics.
+6. Make Agent apply the shared default theme and convert its hard-coded palette to semantic
+   variables while preserving its conversation-specific layout.
+7. Add focused shared and product integration tests.
+8. Run each frontend's lint, typecheck, unit tests, contract drift check, and production build;
+   then run the relevant Docker and Playwright flows when the local environment supports them.
+9. Review the final diff for accidental component extraction, frontend cross-imports, unsafe CSS,
+   inaccessible contrast/focus, generated artifacts, and unrelated redesign.
 
 ## Definition of done
 
-- The tracked workspace consistently presents itself as AI Ecosystem with Knowledge and Agent
-  products.
-- Product directories, Python and npm packages, commands, Compose services, configuration,
-  databases, migrations, contracts, tests, and current documentation use the agreed names.
-- Knowledge and Agent remain independently deployable with separate state and migrations.
-- Agent still accesses Knowledge only through its public HTTP or MCP interfaces.
-- Existing seeds remain idempotent and do not create duplicate durable identities solely because
-  of the rename.
-- Generated contracts and lockfiles have no drift.
-- Relevant Ruff, Pyright, pytest, npm lint, typecheck, unit, build, contract, Docker, Compose,
-  PostgreSQL integration, and Playwright checks pass.
-- A final repository-wide search documents or removes every remaining old-name occurrence.
-- `NAMING.md` remains a separate follow-on architecture document; shared package extraction,
-  branding consolidation, and unrelated refactors are not folded into the rename.
+- A root `@ai-ecosystem/brand` workspace package owns the validated semantic theme contract,
+  deterministic CSS-variable mapping, compiled default palette, and minimal shared global styling.
+- Knowledge and Agent both consume the package directly and no longer maintain competing default
+  colour, typography, focus, surface, or border foundations.
+- Agent has no hard-coded parallel theme palette; product-specific styles use shared semantic
+  variables.
+- Knowledge's optional Northstar theme still works without becoming an Agent or ecosystem
+  dependency.
+- Both products retain their own layouts, components, interaction patterns, state, APIs, and
+  deployment boundaries.
+- Shared-package and product tests cover theme validation, unsafe values, CSS-variable mapping,
+  default application, and Knowledge theme selection.
+- The package lockfile is regenerated and workspace dependency resolution is reproducible.
+- Relevant lint, typecheck, Vitest, contract drift, production build, Docker, and Playwright checks
+  pass, or any confirmed host-toolchain blocker is reported with exact evidence rather than
+  described as a product failure.
+- Documentation and agent context accurately describe the implemented shared brand foundation.
 
 ## Explicitly deferred
 
-- Extracting root `packages/ui`, `packages/brand`, observability, identity, configuration, or test
-  packages;
-- consolidating the two current frontend themes or creating a shared design system;
-- adding the default Brand Skill or structured theme references;
-- adding future products, connectors, actions, automation, or an agent runtime;
-- changing authorization behavior, identity semantics, database models, or public product
-  capabilities;
-- production deployment or hosted database changes;
-- renaming the GitHub repository, changing remote settings, or moving the local checkout without
-  explicit maintainer authorization.
+- A general `@ai-ecosystem/ui` component library or extraction of buttons, forms, cards, shells,
+  navigation, tables, messages, composers, or evidence components;
+- `@ai-ecosystem/frontend-config` and shared ESLint, TypeScript, Tailwind, Vitest, or Playwright
+  configuration;
+- adding the default Brand Skill or structured `references/theme.json` files;
+- loading UI themes from Knowledge, Skills, a database, tenant settings, or a remote provider;
+- synchronizing a selected theme across independently deployed products;
+- broader visual redesign, new logos, marketing pages, or product navigation changes;
+- shared backend packages, identity extraction, observability extraction, deployment restructuring,
+  or new products;
+- changing authentication, authorization, persistence, migrations, public APIs, or product
+  capabilities.

@@ -1,0 +1,22 @@
+{
+  "name": "@ai-ecosystem/brand",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./foundation.css": "./src/foundation.css"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "24.3.1",
+    "typescript": "5.9.2",
+    "vitest": "3.2.4"
+  }
+}

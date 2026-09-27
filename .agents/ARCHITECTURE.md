@@ -57,6 +57,30 @@ without optimistic durable messages or direct backend access. A separate read-on
 shows lookup results as escaped text outside conversation history. Agent propagates the validated
 provider-neutral local identity to Knowledge server-side; credentials never reach the browser.
 
+## Shared Package And Delivery Boundaries
+
+Root `packages/` is reserved for focused reusable implementation with deliberate public APIs. A
+shared package may provide stable presentation, identity, observability, configuration, HTTP, or
+testing foundations only after more than one product needs the same behavior. It must not become a
+generic `shared`, `common`, or `utils` layer.
+
+The implemented `@ai-ecosystem/brand` package owns the Zod-validated semantic colour contract,
+compiled default AI Ecosystem palette, deterministic CSS custom-property mapping, and minimal
+global typography, focus, surface, and control stylesheet. Knowledge and Agent depend on it
+directly and apply the compiled default at their root layout boundary. Knowledge alone owns the
+optional fictional Northstar palette and cookie selection behavior. Product layouts and components
+remain local; shared UI primitives and shared frontend configuration are not implemented.
+
+Products own domain behavior, durable state, authorization decisions, migrations, and deployable
+applications. Shared packages must not import product internals or collapse product policies into
+one implementation. If shared code begins to own operational state or migrations, reconsider it as
+an independently deployed product or service.
+
+Each product retains its own migration chain, Dockerfile, runtime configuration, and release
+boundary. Root deployment configuration may compose products into an environment, and root CI may
+coordinate product-owned commands, but neither changes product ownership or permits direct access
+to another product's database or internal packages.
+
 ## Knowledge Purpose And Boundary
 
 Knowledge is a self-hosted, agent-agnostic store for governed organisational knowledge and reusable agent Skills. It stores and serves durable state through HTTP and MCP. It does not browse, fetch provider content, execute Skills, select tools, or orchestrate agent workflows; Agent or another external agent owns those responsibilities.

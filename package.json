@@ -2,9 +2,12 @@
   "name": "ai-ecosystem",
   "private": true,
   "workspaces": [
+    "packages/*",
     "products/*/apps/web"
   ],
   "scripts": {
+    "brand:typecheck": "npm run typecheck --workspace @ai-ecosystem/brand",
+    "brand:test": "npm run test --workspace @ai-ecosystem/brand",
     "web:dev": "npm run dev --workspace @ai-ecosystem/knowledge-web",
     "web:lint": "npm run lint --workspace @ai-ecosystem/knowledge-web",
     "web:typecheck": "npm run typecheck --workspace @ai-ecosystem/knowledge-web",

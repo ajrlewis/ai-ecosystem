@@ -19,9 +19,11 @@ CMD ["knowledge-api"]
 FROM node:22-slim AS web-build
 WORKDIR /app
 COPY package.json package-lock.json ./
+COPY packages/brand/package.json packages/brand/package.json
 COPY products/knowledge/apps/web/package.json products/knowledge/apps/web/package.json
 COPY products/agent/apps/web/package.json products/agent/apps/web/package.json
 RUN npm ci
+COPY packages/brand packages/brand
 COPY products/knowledge/apps/web products/knowledge/apps/web
 RUN npm run build:app --workspace @ai-ecosystem/knowledge-web
 

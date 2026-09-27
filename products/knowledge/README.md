@@ -14,7 +14,10 @@ authorized inventories, and explicitly seeds five repository-owned defaults. Sea
 embeddings, document retrieval/parsing, and production identity integration remain target state.
 
 The console provides local sign-in, three-pane Page/content/provenance browsing, Skills and
-reference inventories, authorized hybrid search, runtime Knowledge/Northstar themes, and sanitized Markdown. It calls the
+reference inventories, authorized hybrid search, runtime default/Northstar themes, and sanitized Markdown. Its
+validated semantic contract, default AI Ecosystem palette, and global visual foundation come from
+the root `@ai-ecosystem/brand` package; the optional fictional Northstar palette and selection
+behavior remain Knowledge-owned. It calls the
 public HTTP API from Server Components, so `LOCAL_BEARER_TOKEN` is never delivered to browser
 JavaScript. FastAPI's generated OpenAPI document deterministically generates the checked-in
 Zod validators; `npm run web:contracts:check` detects drift.

@@ -1,39 +1,14 @@
-import { z } from "zod";
+import {
+  defaultTheme,
+  themeStyle,
+  themeTokens,
+  type ThemeTokens,
+} from "@ai-ecosystem/brand";
 
-const safeColor = z
-  .string()
-  .regex(
-    /^(#[0-9a-fA-F]{6}|(rgb|hsl)a?\([\d\s.,%/-]+\))$/,
-    "unsafe CSS colour",
-  );
-export const themeTokens = z.object({
-  primary: safeColor,
-  accent: safeColor,
-  surface: safeColor,
-  surfaceRaised: safeColor,
-  text: safeColor,
-  textMuted: safeColor,
-  border: safeColor,
-  focus: safeColor,
-  success: safeColor,
-  warning: safeColor,
-  danger: safeColor,
-});
-export type ThemeTokens = z.infer<typeof themeTokens>;
+export { themeStyle };
+
 export const themes = {
-  knowledge: themeTokens.parse({
-    primary: "#334155",
-    accent: "#0f766e",
-    surface: "#f8fafc",
-    surfaceRaised: "#ffffff",
-    text: "#0f172a",
-    textMuted: "#475569",
-    border: "#cbd5e1",
-    focus: "#2563eb",
-    success: "#15803d",
-    warning: "#a16207",
-    danger: "#b91c1c",
-  }),
+  knowledge: defaultTheme,
   northstar: themeTokens.parse({
     primary: "#173b57",
     accent: "#b45309",
@@ -51,12 +26,4 @@ export const themes = {
 export type ThemeName = keyof typeof themes;
 export function isThemeName(value: string): value is ThemeName {
   return value in themes;
-}
-export function themeStyle(theme: ThemeTokens): React.CSSProperties {
-  return Object.fromEntries(
-    Object.entries(theme).map(([key, value]) => [
-      `--${key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`)}`,
-      value,
-    ]),
-  ) as React.CSSProperties;
 }
