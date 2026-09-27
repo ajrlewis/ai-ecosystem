@@ -26,6 +26,11 @@ from message content; untitled conversations use a stable ID-based label. Empty,
 missing, conflict, history-full, timeout, unavailable, rejected, malformed-response, and
 unexpected-failure states are explicit and safe.
 
+The application consumes the root `@ai-ecosystem/brand` package directly. Its root layout applies
+the validated, dependency-free default AI Ecosystem theme, while conversation, evidence, sign-in,
+navigation, and responsive layout styling remains Agent-owned. Agent does not load Knowledge's
+optional Northstar example theme or depend on runtime theme configuration.
+
 The browser talks only to Next.js Server Components, route handlers, and server actions. Those
 server-only modules call Agent's public create/list/get/append HTTP API using checked-in Zod
 validators generated from FastAPI OpenAPI. Requests are bounded, uncached, and never retry. The

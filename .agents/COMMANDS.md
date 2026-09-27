@@ -164,6 +164,8 @@ measurements verify bounded concurrency behavior; they are not a production capa
 ## Web console
 
 ```bash
+npm run brand:typecheck
+npm run brand:test
 npm install
 npm run web:contracts:check
 npm run web:lint
@@ -184,6 +186,9 @@ npm run agent:web:dev
 npm run agent:web:contracts:check
 npm run test:e2e --workspace @ai-ecosystem/agent-web
 ```
+
+The brand commands validate the shared semantic theme contract, unsafe-value rejection,
+deterministic CSS-variable compilation, both product dependencies, and root-layout application.
 
 The Agent Playwright flow expects the running Compose stack and exercises local sign-in,
 conversation creation, a deterministic atomic turn, navigation, Stop after the first delta, and
