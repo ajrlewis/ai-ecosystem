@@ -1,6 +1,6 @@
 # Testing Preset
 
-Adopted for Brain. In addition to ordinary behavior, tests must prove immutable versions, content deduplication, provenance, derived-data rebuildability, equivalent HTTP/MCP rules, and authorization-safe search.
+Adopted for Knowledge. In addition to ordinary behavior, tests must prove immutable versions, content deduplication, provenance, derived-data rebuildability, equivalent HTTP/MCP rules, and authorization-safe search.
 
 - Use fast, deterministic unit tests as the first verification layer for business rules, transformations, validation, and failure behavior.
 - Add integration tests at real system boundaries such as databases, HTTP APIs, queues, filesystems, caches, and cloud adapters. Prefer disposable dependencies and deterministic seeded data over shared mutable environments.

@@ -1,5 +1,5 @@
 [project]
-name = "mind-workspace"
+name = "ai-ecosystem-workspace"
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = []
@@ -22,19 +22,19 @@ members = ["products/*/apps/*", "products/*/packages/*", "packages/*"]
 exclude = ["products/*/apps/web"]
 
 [tool.uv.sources]
-brain-ai = { workspace = true }
-brain-api = { workspace = true }
-brain-auth = { workspace = true }
-brain-core = { workspace = true }
-brain-db = { workspace = true }
-brain-mcp = { workspace = true }
-brain-schemas = { workspace = true }
-brain-search = { workspace = true }
-cortex-api = { workspace = true }
-cortex-ai = { workspace = true }
-cortex-auth = { workspace = true }
-cortex-brain = { workspace = true }
-cortex-state = { workspace = true }
+knowledge-ai = { workspace = true }
+knowledge-api = { workspace = true }
+knowledge-auth = { workspace = true }
+knowledge-core = { workspace = true }
+knowledge-db = { workspace = true }
+knowledge-mcp = { workspace = true }
+knowledge-schemas = { workspace = true }
+knowledge-search = { workspace = true }
+agent-api = { workspace = true }
+agent-ai = { workspace = true }
+agent-auth = { workspace = true }
+agent-knowledge = { workspace = true }
+agent-state = { workspace = true }
 
 [tool.ruff]
 target-version = "py313"
@@ -49,7 +49,7 @@ select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
 include = ["products/*/apps", "products/*/packages", "products/*/tests"]
-exclude = ["**/__pycache__", "products/brain/packages/db/hatch_build.py"]
+exclude = ["**/__pycache__", "products/knowledge/packages/db/hatch_build.py"]
 venvPath = "."
 venv = ".venv"
 
@@ -64,10 +64,10 @@ markers = [
 
 [tool.coverage.run]
 branch = true
-source = ["brain_api", "brain_auth", "brain_core", "brain_db", "brain_mcp", "brain_schemas", "cortex_ai", "cortex_api", "cortex_auth", "cortex_brain", "cortex_state"]
+source = ["knowledge_api", "knowledge_auth", "knowledge_core", "knowledge_db", "knowledge_mcp", "knowledge_schemas", "agent_ai", "agent_api", "agent_auth", "agent_knowledge", "agent_state"]
 omit = [
-  "products/brain/packages/db/src/brain_db/defaults.py",
-  "products/brain/packages/db/src/brain_db/seed.py",
+  "products/knowledge/packages/db/src/knowledge_db/defaults.py",
+  "products/knowledge/packages/db/src/knowledge_db/seed.py",
 ]
 
 [tool.coverage.report]

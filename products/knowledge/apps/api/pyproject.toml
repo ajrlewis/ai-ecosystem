@@ -1,0 +1,27 @@
+[project]
+name = "knowledge-api"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+  "knowledge-auth",
+  "knowledge-core",
+  "knowledge-db",
+  "knowledge-mcp",
+  "knowledge-schemas",
+  "fastapi>=0.116,<1",
+  "uvicorn[standard]>=0.35,<1",
+]
+
+[project.scripts]
+knowledge-api = "knowledge_api.main:run"
+
+[tool.uv.sources]
+knowledge-auth = { workspace = true }
+knowledge-core = { workspace = true }
+knowledge-db = { workspace = true }
+knowledge-mcp = { workspace = true }
+knowledge-schemas = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

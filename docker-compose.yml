@@ -1,45 +1,45 @@
-name: mind
+name: ai-ecosystem
 
 services:
-  brain-postgres:
+  knowledge-postgres:
     image: pgvector/pgvector:pg17
     environment:
-      POSTGRES_DB: brain
-      POSTGRES_USER: brain
-      POSTGRES_PASSWORD: brain
+      POSTGRES_DB: knowledge
+      POSTGRES_USER: knowledge
+      POSTGRES_PASSWORD: knowledge
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - brain-postgres-data:/var/lib/postgresql/data
-      - ./products/brain/docker/postgres/init.sql:/docker-entrypoint-initdb.d/001-vector.sql:ro
+      - knowledge-postgres-data:/var/lib/postgresql/data
+      - ./products/knowledge/docker/postgres/init.sql:/docker-entrypoint-initdb.d/001-vector.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U brain -d brain"]
+      test: ["CMD-SHELL", "pg_isready -U knowledge -d knowledge"]
       interval: 2s
       timeout: 5s
       retries: 15
 
-  brain-api:
+  knowledge-api:
     build:
       context: .
-      dockerfile: products/brain/Dockerfile
+      dockerfile: products/knowledge/Dockerfile
       target: api
     environment:
-      DATABASE_URL: postgresql+psycopg://brain:brain@brain-postgres:5432/brain
+      DATABASE_URL: postgresql+psycopg://knowledge:knowledge@knowledge-postgres:5432/knowledge
       DATABASE_POOL_SIZE: ${DATABASE_POOL_SIZE:-10}
       DATABASE_MAX_OVERFLOW: ${DATABASE_MAX_OVERFLOW:-5}
       DATABASE_POOL_TIMEOUT_SECONDS: ${DATABASE_POOL_TIMEOUT_SECONDS:-10}
       DATABASE_POOL_RECYCLE_SECONDS: ${DATABASE_POOL_RECYCLE_SECONDS:-1800}
       DATABASE_STATEMENT_TIMEOUT_MS: ${DATABASE_STATEMENT_TIMEOUT_MS:-30000}
       DATABASE_LOCK_TIMEOUT_MS: ${DATABASE_LOCK_TIMEOUT_MS:-5000}
-      LOCAL_BEARER_TOKEN: ${LOCAL_BEARER_TOKEN:-brain-local-dev}
+      LOCAL_BEARER_TOKEN: ${LOCAL_BEARER_TOKEN:-knowledge-local-dev}
       LOCAL_ORGANIZATION_ID: ${LOCAL_ORGANIZATION_ID:-35982da3-60ae-5eea-b46a-088c3cc0f278}
       LOCAL_PRINCIPAL_ID: ${LOCAL_PRINCIPAL_ID:-7f180c45-c2f9-5f9d-b715-bf68f4ced724}
       LOCAL_GROUP_IDS: ${LOCAL_GROUP_IDS:-["8bde0934-4daa-5afa-a9c3-24e849557486"]}
-      LOCAL_IDENTITY_SECRET: ${LOCAL_IDENTITY_SECRET:-mind-local-identity-secret}
+      LOCAL_IDENTITY_SECRET: ${LOCAL_IDENTITY_SECRET:-ai-ecosystem-local-identity-secret}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
-      brain-migrate:
+      knowledge-migrate:
         condition: service_completed_successfully
     healthcheck:
       test:
@@ -53,19 +53,19 @@ services:
       timeout: 5s
       retries: 15
 
-  brain-web:
+  knowledge-web:
     build:
       context: .
-      dockerfile: products/brain/Dockerfile
+      dockerfile: products/knowledge/Dockerfile
       target: web
     environment:
-      BRAIN_API_URL: http://brain-api:8000
-      LOCAL_BEARER_TOKEN: ${LOCAL_BEARER_TOKEN:-brain-local-dev}
-      LOCAL_IDENTITY_SECRET: ${LOCAL_IDENTITY_SECRET:-mind-local-identity-secret}
+      KNOWLEDGE_API_URL: http://knowledge-api:8000
+      LOCAL_BEARER_TOKEN: ${LOCAL_BEARER_TOKEN:-knowledge-local-dev}
+      LOCAL_IDENTITY_SECRET: ${LOCAL_IDENTITY_SECRET:-ai-ecosystem-local-identity-secret}
     ports:
       - "${WEB_PORT:-3000}:3000"
     depends_on:
-      brain-api:
+      knowledge-api:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000/sign-in').then(r=>{if(!r.ok)process.exit(1)})"]
@@ -73,39 +73,39 @@ services:
       timeout: 5s
       retries: 15
 
-  brain-migrate:
+  knowledge-migrate:
     build:
       context: .
-      dockerfile: products/brain/Dockerfile
+      dockerfile: products/knowledge/Dockerfile
       target: api
-    command: ["alembic", "-c", "products/brain/alembic.ini", "upgrade", "head"]
+    command: ["alembic", "-c", "products/knowledge/alembic.ini", "upgrade", "head"]
     environment:
-      DATABASE_URL: postgresql+psycopg://brain:brain@brain-postgres:5432/brain
+      DATABASE_URL: postgresql+psycopg://knowledge:knowledge@knowledge-postgres:5432/knowledge
     depends_on:
-      brain-postgres:
+      knowledge-postgres:
         condition: service_healthy
     restart: "no"
 
-  cortex-api:
+  agent-api:
     build:
       context: .
-      dockerfile: products/cortex/Dockerfile
+      dockerfile: products/agent/Dockerfile
       target: api
     environment:
-      BRAIN_URL: http://brain-api:8000
-      BRAIN_API_KEY: ${LOCAL_BEARER_TOKEN:-brain-local-dev}
-      BRAIN_CONNECT_TIMEOUT_SECONDS: ${BRAIN_CONNECT_TIMEOUT_SECONDS:-2}
-      BRAIN_READ_TIMEOUT_SECONDS: ${BRAIN_READ_TIMEOUT_SECONDS:-5}
+      KNOWLEDGE_URL: http://knowledge-api:8000
+      KNOWLEDGE_API_KEY: ${LOCAL_BEARER_TOKEN:-knowledge-local-dev}
+      KNOWLEDGE_CONNECT_TIMEOUT_SECONDS: ${KNOWLEDGE_CONNECT_TIMEOUT_SECONDS:-2}
+      KNOWLEDGE_READ_TIMEOUT_SECONDS: ${KNOWLEDGE_READ_TIMEOUT_SECONDS:-5}
       MODEL_BACKEND: deterministic
-      DETERMINISTIC_STREAM_DELAY_SECONDS: ${CORTEX_DETERMINISTIC_STREAM_DELAY_SECONDS:-0.25}
-      CORTEX_DATABASE_URL: postgresql+psycopg://brain:brain@brain-postgres:5432/cortex
-      CORTEX_LOCAL_BEARER_TOKEN: ${CORTEX_LOCAL_BEARER_TOKEN:-cortex-local-dev}
-      CORTEX_LOCAL_OWNER_ID: ${CORTEX_LOCAL_OWNER_ID:-cortex-local-user}
-      LOCAL_IDENTITY_SECRET: ${LOCAL_IDENTITY_SECRET:-mind-local-identity-secret}
+      DETERMINISTIC_STREAM_DELAY_SECONDS: ${AGENT_DETERMINISTIC_STREAM_DELAY_SECONDS:-0.25}
+      AGENT_DATABASE_URL: postgresql+psycopg://knowledge:knowledge@knowledge-postgres:5432/agent
+      AGENT_LOCAL_BEARER_TOKEN: ${AGENT_LOCAL_BEARER_TOKEN:-agent-local-dev}
+      AGENT_LOCAL_OWNER_ID: ${AGENT_LOCAL_OWNER_ID:-agent-local-user}
+      LOCAL_IDENTITY_SECRET: ${LOCAL_IDENTITY_SECRET:-ai-ecosystem-local-identity-secret}
     ports:
-      - "${CORTEX_API_PORT:-8100}:8000"
+      - "${AGENT_API_PORT:-8100}:8000"
     depends_on:
-      cortex-migrate:
+      agent-migrate:
         condition: service_completed_successfully
     healthcheck:
       test:
@@ -119,47 +119,47 @@ services:
       timeout: 5s
       retries: 15
 
-  cortex-migrate:
+  agent-migrate:
     build:
       context: .
-      dockerfile: products/cortex/Dockerfile
+      dockerfile: products/agent/Dockerfile
       target: api
-    command: ["alembic", "-c", "products/cortex/alembic.ini", "upgrade", "head"]
+    command: ["alembic", "-c", "products/agent/alembic.ini", "upgrade", "head"]
     environment:
-      CORTEX_DATABASE_URL: postgresql+psycopg://brain:brain@brain-postgres:5432/cortex
+      AGENT_DATABASE_URL: postgresql+psycopg://knowledge:knowledge@knowledge-postgres:5432/agent
     depends_on:
-      cortex-db-init:
+      agent-db-init:
         condition: service_completed_successfully
     restart: "no"
 
-  cortex-db-init:
+  agent-db-init:
     image: pgvector/pgvector:pg17
     environment:
-      PGPASSWORD: brain
+      PGPASSWORD: knowledge
     command:
       [
         "sh",
         "-c",
-        "psql -h brain-postgres -U brain -d brain -tAc \"SELECT 1 FROM pg_database WHERE datname='cortex'\" | grep -q 1 || createdb -h brain-postgres -U brain -O brain cortex",
+        "psql -h knowledge-postgres -U knowledge -d knowledge -tAc \"SELECT 1 FROM pg_database WHERE datname='agent'\" | grep -q 1 || createdb -h knowledge-postgres -U knowledge -O knowledge agent",
       ]
     depends_on:
-      brain-postgres:
+      knowledge-postgres:
         condition: service_healthy
     restart: "no"
 
-  cortex-web:
+  agent-web:
     build:
       context: .
-      dockerfile: products/cortex/Dockerfile
+      dockerfile: products/agent/Dockerfile
       target: web
     environment:
-      CORTEX_API_URL: http://cortex-api:8000
-      CORTEX_API_BEARER_TOKEN: ${CORTEX_LOCAL_BEARER_TOKEN:-cortex-local-dev}
-      LOCAL_IDENTITY_SECRET: ${LOCAL_IDENTITY_SECRET:-mind-local-identity-secret}
+      AGENT_API_URL: http://agent-api:8000
+      AGENT_API_BEARER_TOKEN: ${AGENT_LOCAL_BEARER_TOKEN:-agent-local-dev}
+      LOCAL_IDENTITY_SECRET: ${LOCAL_IDENTITY_SECRET:-ai-ecosystem-local-identity-secret}
     ports:
-      - "${CORTEX_WEB_PORT:-3100}:3000"
+      - "${AGENT_WEB_PORT:-3100}:3000"
     depends_on:
-      cortex-api:
+      agent-api:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000/sign-in').then(r=>{if(!r.ok)process.exit(1)})"]
@@ -168,4 +168,4 @@ services:
       retries: 15
 
 volumes:
-  brain-postgres-data:
+  knowledge-postgres-data:

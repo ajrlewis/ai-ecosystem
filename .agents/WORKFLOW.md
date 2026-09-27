@@ -1,14 +1,14 @@
 # Workflow
 
-`README.md` defines the Mind product workspace. `products/brain/README.md` is Brain's
-target-state product specification, and `products/cortex/README.md` is the Cortex specification.
+`README.md` defines the AI Ecosystem product workspace. `products/knowledge/README.md` is Knowledge's
+target-state product specification, and `products/agent/README.md` is the Agent specification.
 `.agents/ARCHITECTURE.md` records implemented slices; do not describe specifications as
 implemented or proposed commands as verified.
 
 ## Change Loop
 
 1. Read the relevant product specification, current implementation, tests, and agent guidance.
-2. Preserve Brain's agent-agnostic storage boundary and make the smallest change that satisfies the task.
+2. Preserve Knowledge's agent-agnostic storage boundary and make the smallest change that satisfies the task.
 3. Add or update focused tests for changed behavior, including failure and authorization paths where relevant.
 4. Run the relevant verified commands from `.agents/COMMANDS.md`.
 5. Review the diff for scope, secrets, generated files, migrations, and documentation accuracy.
@@ -16,13 +16,13 @@ implemented or proposed commands as verified.
 
 ## Python And TypeScript Changes
 
-- Python applications and packages use uv, Ruff, Pyright, and pytest. Brain tests live in
-  `products/brain/tests/`, with dependency-backed PostgreSQL behavior behind the `integration` marker.
-- The TypeScript applications are npm workspaces at `products/brain/apps/web` and
-  `products/cortex/apps/web`. Use ESLint, TypeScript's
+- Python applications and packages use uv, Ruff, Pyright, and pytest. Knowledge tests live in
+  `products/knowledge/tests/`, with dependency-backed PostgreSQL behavior behind the `integration` marker.
+- The TypeScript applications are npm workspaces at `products/knowledge/apps/web` and
+  `products/agent/apps/web`. Use ESLint, TypeScript's
   no-emit check, Vitest with Testing Library for components and server transport behavior,
   and Playwright for browser integration with the real Compose API and Northstar seed.
-- FastAPI schemas are authoritative. Regenerate `products/brain/apps/web/openapi.json` and the generated Zod
+- FastAPI schemas are authoritative. Regenerate `products/knowledge/apps/web/openapi.json` and the generated Zod
   validators after public API changes; never hand-edit generated contracts. The drift check
   must pass in CI.
 - Keep backend tokens and local credential validation in server-only modules. Client

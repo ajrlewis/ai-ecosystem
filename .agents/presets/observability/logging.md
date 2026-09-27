@@ -1,6 +1,6 @@
 # Logging Preset
 
-Adopted for Brain. Preserve incoming correlation IDs across HTTP/MCP, database, search, and embedding-provider boundaries; never log knowledge content, credentials, or hidden model reasoning unnecessarily.
+Adopted for Knowledge. Preserve incoming correlation IDs across HTTP/MCP, database, search, and embedding-provider boundaries; never log knowledge content, credentials, or hidden model reasoning unnecessarily.
 
 - Use the repository's established logging facade. Keep initialization, formatting, enrichment, filtering, and sinks centralized rather than configuring loggers throughout application code.
 - Document where logging is configured and the main observability boundaries in `.agents/ARCHITECTURE.md`; record exact local log and diagnostic commands in `.agents/COMMANDS.md`.

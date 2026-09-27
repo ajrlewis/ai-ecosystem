@@ -7,10 +7,10 @@ Python 3.13.15, Docker 29.7.2, and Docker Compose 5.5.0 were used on 2026-09-12.
 The explicit cache path below is required in restricted coding-agent environments and is
 safe to use elsewhere.
 
-## Mind workspace
+## AI Ecosystem workspace
 
-The root uv and npm workspaces include Brain beneath `products/brain` and the Cortex foundation
-beneath `products/cortex`.
+The root uv and npm workspaces include Knowledge beneath `products/knowledge` and the Agent foundation
+beneath `products/agent`.
 
 Verified on 2026-09-14:
 
@@ -26,14 +26,14 @@ Verified on 2026-09-13. The API health response was queried at
 `http://127.0.0.1:8000/mcp/`, and the MCP command reached its stdio serving loop.
 
 ```bash
-UV_CACHE_DIR="$PWD/.uv-cache" uv run brain-api
-UV_CACHE_DIR="$PWD/.uv-cache" uv run brain-mcp
+UV_CACHE_DIR="$PWD/.uv-cache" uv run knowledge-api
+UV_CACHE_DIR="$PWD/.uv-cache" uv run knowledge-mcp
 ```
 
-The minimal Cortex HTTP service exposes `GET /health` on port 8000 when run directly:
+The minimal Agent HTTP service exposes `GET /health` on port 8000 when run directly:
 
 ```bash
-UV_CACHE_DIR="$PWD/.uv-cache" uv run cortex-api
+UV_CACHE_DIR="$PWD/.uv-cache" uv run agent-api
 ```
 
 It defaults to the hermetic deterministic model. To opt into the non-streaming OpenAI Responses
@@ -44,59 +44,59 @@ It also exposes the stateless deterministic-model route `POST /chat/turn`. With 
 the real boundary check is:
 
 ```bash
-CORTEX_TEST_URL=http://127.0.0.1:8100 \
-  UV_CACHE_DIR="$PWD/.uv-cache" uv run pytest products/cortex/tests/e2e/test_chat_turn.py
+AGENT_TEST_URL=http://127.0.0.1:8100 \
+  UV_CACHE_DIR="$PWD/.uv-cache" uv run pytest products/agent/tests/e2e/test_chat_turn.py
 ```
 
-The authenticated durable conversation boundary uses the Cortex-only local token:
+The authenticated durable conversation boundary uses the Agent-only local token:
 
 ```bash
-CORTEX_TEST_URL=http://127.0.0.1:8100 \
-  CORTEX_TEST_BEARER_TOKEN=cortex-local-dev \
-  UV_CACHE_DIR="$PWD/.uv-cache" uv run pytest products/cortex/tests/e2e/test_conversations.py
+AGENT_TEST_URL=http://127.0.0.1:8100 \
+  AGENT_TEST_BEARER_TOKEN=agent-local-dev \
+  UV_CACHE_DIR="$PWD/.uv-cache" uv run pytest products/agent/tests/e2e/test_conversations.py
 ```
 
-After Northstar is seeded, `test_brain_boundary.py` also checks the authenticated
-`POST /knowledge/lookup` search-then-current-Page flow. It uses the same Cortex-only bearer
-and the configured Brain service credential:
+After Northstar is seeded, `test_knowledge_boundary.py` also checks the authenticated
+`POST /knowledge/lookup` search-then-current-Page flow. It uses the same Agent-only bearer
+and the configured Knowledge service credential:
 
 ```bash
-CORTEX_TEST_URL=http://127.0.0.1:8100 \
-  CORTEX_TEST_BEARER_TOKEN=cortex-local-dev \
-  UV_CACHE_DIR="$PWD/.uv-cache" uv run pytest products/cortex/tests/e2e/test_brain_boundary.py
+AGENT_TEST_URL=http://127.0.0.1:8100 \
+  AGENT_TEST_BEARER_TOKEN=agent-local-dev \
+  UV_CACHE_DIR="$PWD/.uv-cache" uv run pytest products/agent/tests/e2e/test_knowledge_boundary.py
 ```
 
-Set both `BRAIN_URL` and `BRAIN_API_KEY` to enable `GET /health/brain`; the local `GET /health`
-remains independent. With the Compose stack running, the real Cortex-to-Brain HTTP boundary check
+Set both `KNOWLEDGE_URL` and `KNOWLEDGE_API_KEY` to enable `GET /health/knowledge`; the local `GET /health`
+remains independent. With the Compose stack running, the real Agent-to-Knowledge HTTP boundary check
 is:
 
 ```bash
-CORTEX_TEST_URL=http://127.0.0.1:8100 \
-  UV_CACHE_DIR="$PWD/.uv-cache" uv run pytest products/cortex/tests/e2e/test_brain_boundary.py
+AGENT_TEST_URL=http://127.0.0.1:8100 \
+  UV_CACHE_DIR="$PWD/.uv-cache" uv run pytest products/agent/tests/e2e/test_knowledge_boundary.py
 ```
 
 Register the running local HTTP MCP endpoint with Codex while keeping the bearer token in the
 client process environment:
 
 ```bash
-export BRAIN_MCP_TOKEN=brain-local-dev
-codex mcp add brain-local \
+export KNOWLEDGE_MCP_TOKEN=knowledge-local-dev
+codex mcp add knowledge-local \
   --url http://127.0.0.1:8000/mcp/ \
-  --bearer-token-env-var BRAIN_MCP_TOKEN
-codex mcp get brain-local
+  --bearer-token-env-var KNOWLEDGE_MCP_TOKEN
+codex mcp get knowledge-local
 ```
 
-Open a new Codex session to discover the tools. `codex mcp remove brain-local` removes the
+Open a new Codex session to discover the tools. `codex mcp remove knowledge-local` removes the
 host-local registration. This changes the user's Codex configuration, not repository state.
 
 After migrating a local database, the deterministic synthetic knowledge seed is:
 
 ```bash
-DATABASE_URL=postgresql+psycopg://brain:brain@localhost:5432/brain \
-  UV_CACHE_DIR="$PWD/.uv-cache" uv run brain-seed-northstar
+DATABASE_URL=postgresql+psycopg://knowledge:knowledge@localhost:5432/knowledge \
+  UV_CACHE_DIR="$PWD/.uv-cache" uv run knowledge-seed-northstar
 ```
 
-The command reads `products/brain/examples/northstar/seed/manifest.yaml` plus its referenced UTF-8
+The command reads `products/knowledge/examples/northstar/seed/manifest.yaml` plus its referenced UTF-8
 documents. It performs no downloads and can be rerun without duplicating identities,
 versions, provenance, or deterministic derived chunks.
 
@@ -104,8 +104,8 @@ Seed the repository-owned default Skill bundle explicitly after resolving deploy
 identities (these selectors match Northstar):
 
 ```bash
-DATABASE_URL=postgresql+psycopg://brain:brain@localhost:5432/brain \
-  UV_CACHE_DIR="$PWD/.uv-cache" uv run brain-seed-defaults \
+DATABASE_URL=postgresql+psycopg://knowledge:knowledge@localhost:5432/knowledge \
+  UV_CACHE_DIR="$PWD/.uv-cache" uv run knowledge-seed-defaults \
   --organization northstar \
   --policy "Northstar organization-wide" \
   --steward northstar-alex \
@@ -114,7 +114,7 @@ DATABASE_URL=postgresql+psycopg://brain:brain@localhost:5432/brain \
 
 Add `--review` to print a read-only unified diff between bundled and deployed current
 `SKILL.md` documents before proposing a bundled upgrade. The conventional Skill directories
-and supporting references are included in the `brain-db` wheel and Docker build.
+and supporting references are included in the `knowledge-db` wheel and Docker build.
 
 ## Quality
 
@@ -133,15 +133,15 @@ integration suite is intentionally separate and includes PostgreSQL stale-writer
 timeout behavior, and a 100-request HTTP/MCP concurrency exercise with a five-connection pool:
 
 ```bash
-TEST_DATABASE_URL=postgresql://brain:brain@localhost:5432/brain \
+TEST_DATABASE_URL=postgresql://knowledge:knowledge@localhost:5432/knowledge \
   UV_CACHE_DIR="$PWD/.uv-cache" uv run pytest -m integration
 ```
 
-Cortex owns a separate migration chain and database. Its focused PostgreSQL suite is:
+Agent owns a separate migration chain and database. Its focused PostgreSQL suite is:
 
 ```bash
-CORTEX_TEST_DATABASE_URL=postgresql://brain:brain@localhost:5432/cortex \
-  UV_CACHE_DIR="$PWD/.uv-cache" uv run pytest products/cortex/tests/integration/test_cortex_postgres.py
+AGENT_TEST_DATABASE_URL=postgresql://knowledge:knowledge@localhost:5432/agent \
+  UV_CACHE_DIR="$PWD/.uv-cache" uv run pytest products/agent/tests/integration/test_agent_postgres.py
 ```
 
 The suite ran 10 PostgreSQL tests on 2026-09-14, including hybrid-search authorization,
@@ -170,33 +170,33 @@ npm run web:lint
 npm run web:typecheck
 npm run web:test
 npm run web:build
-npm run test:e2e --workspace @brain/web
+npm run test:e2e --workspace @ai-ecosystem/knowledge-web
 ```
 
-Cortex web checks and development commands are:
+Agent web checks and development commands are:
 
 ```bash
-npm run cortex:web:lint
-npm run cortex:web:typecheck
-npm run cortex:web:test
-npm run cortex:web:build
-npm run cortex:web:dev
-npm run cortex:web:contracts:check
-npm run test:e2e --workspace @cortex/web
+npm run agent:web:lint
+npm run agent:web:typecheck
+npm run agent:web:test
+npm run agent:web:build
+npm run agent:web:dev
+npm run agent:web:contracts:check
+npm run test:e2e --workspace @ai-ecosystem/agent-web
 ```
 
-The Cortex Playwright flow expects the running Compose stack and exercises local sign-in,
+The Agent Playwright flow expects the running Compose stack and exercises local sign-in,
 conversation creation, a deterministic atomic turn, navigation, Stop after the first delta, and
-reopening persisted history. CI runs it after the seeded Compose stack and Brain Playwright.
+reopening persisted history. CI runs it after the seeded Compose stack and Knowledge Playwright.
 
 `web:test` runs Vitest unit/component and mocked server-transport tests. The Playwright browser
 integration expects a running, migrated, Northstar-seeded Compose stack. Prepare it with:
 
 ```bash
 docker compose up -d --build
-docker compose exec -T brain-api brain-seed-northstar
+docker compose exec -T knowledge-api knowledge-seed-northstar
 npx playwright install chromium
-npm run test:e2e --workspace @brain/web
+npm run test:e2e --workspace @ai-ecosystem/knowledge-web
 ```
 
 Contract generation, lint, type checking, 19 unit/component tests, production builds,
@@ -210,9 +210,9 @@ The Compose model and application image build were verified on 2026-09-14:
 
 ```bash
 docker compose config
-docker build -f products/brain/Dockerfile -t brain:knowledge .
-docker build -f products/cortex/Dockerfile --target api -t cortex:api .
-docker build -f products/cortex/Dockerfile --target web -t cortex:web .
+docker build -f products/knowledge/Dockerfile -t knowledge:knowledge .
+docker build -f products/agent/Dockerfile --target api -t agent:api .
+docker build -f products/agent/Dockerfile --target web -t agent:web .
 ```
 
 Run the combined FastAPI and FastMCP HTTP application with PostgreSQL:
@@ -226,11 +226,11 @@ docker compose down
 Canonical local database lifecycle:
 
 ```bash
-docker compose up -d brain-postgres
-docker compose exec -T brain-postgres pg_isready -U brain -d brain
-docker compose up brain-migrate
-docker compose up -d brain-api
-docker compose exec -T brain-postgres psql -U brain -d brain -c \
+docker compose up -d knowledge-postgres
+docker compose exec -T knowledge-postgres pg_isready -U knowledge -d knowledge
+docker compose up knowledge-migrate
+docker compose up -d knowledge-api
+docker compose exec -T knowledge-postgres psql -U knowledge -d knowledge -c \
   "SELECT extversion FROM pg_extension WHERE extname = 'vector';"
 docker compose down
 ```
@@ -238,28 +238,28 @@ docker compose down
 For a host-run migration instead of the one-shot container:
 
 ```bash
-DATABASE_URL=postgresql+psycopg://brain:brain@localhost:5432/brain \
-  UV_CACHE_DIR="$PWD/.uv-cache" uv run alembic -c products/brain/alembic.ini upgrade head
+DATABASE_URL=postgresql+psycopg://knowledge:knowledge@localhost:5432/knowledge \
+  UV_CACHE_DIR="$PWD/.uv-cache" uv run alembic -c products/knowledge/alembic.ini upgrade head
 ```
 
-For a host-run Cortex migration:
+For a host-run Agent migration:
 
 ```bash
-CORTEX_DATABASE_URL=postgresql+psycopg://brain:brain@localhost:5432/cortex \
-  UV_CACHE_DIR="$PWD/.uv-cache" uv run alembic -c products/cortex/alembic.ini upgrade head
+AGENT_DATABASE_URL=postgresql+psycopg://knowledge:knowledge@localhost:5432/agent \
+  UV_CACHE_DIR="$PWD/.uv-cache" uv run alembic -c products/agent/alembic.ini upgrade head
 ```
 
 If host port 5432 is already occupied, select another port consistently for Compose and
 the test connection:
 
 ```bash
-POSTGRES_PORT=55432 docker compose up -d brain-postgres
-TEST_DATABASE_URL=postgresql://brain:brain@localhost:55432/brain \
+POSTGRES_PORT=55432 docker compose up -d knowledge-postgres
+TEST_DATABASE_URL=postgresql://knowledge:knowledge@localhost:55432/knowledge \
   UV_CACHE_DIR="$PWD/.uv-cache" uv run pytest -m integration
 POSTGRES_PORT=55432 docker compose down
 ```
 
-To erase local Brain database data, use `docker compose down -v`. This permanently removes
+To erase local Knowledge database data, use `docker compose down -v`. This permanently removes
 the disposable Compose volume.
 
 The database lifecycle, clean Alembic upgrade, model/migration comparison, integration

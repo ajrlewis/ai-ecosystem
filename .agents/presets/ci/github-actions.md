@@ -1,6 +1,6 @@
 # GitHub Actions Preset
 
-Adopted for Brain's CI. Pull requests and `main` run Ruff, Pyright, pytest with PostgreSQL + pgvector, and a Docker build without production credentials.
+Adopted for Knowledge's CI. Pull requests and `main` run Ruff, Pyright, pytest with PostgreSQL + pgvector, and a Docker build without production credentials.
 
 - Keep CI close to the commands developers run locally.
 - Pin actions sensibly and avoid unnecessary secrets exposure.

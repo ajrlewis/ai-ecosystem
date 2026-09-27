@@ -1,0 +1,26 @@
+[project]
+name = "agent-api"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+  "agent-ai",
+  "agent-auth",
+  "agent-knowledge",
+  "agent-state",
+  "fastapi>=0.116,<1",
+  "pydantic-settings>=2.10,<3",
+  "uvicorn[standard]>=0.35,<1",
+]
+
+[tool.uv.sources]
+agent-ai = { workspace = true }
+agent-auth = { workspace = true }
+agent-knowledge = { workspace = true }
+agent-state = { workspace = true }
+
+[project.scripts]
+agent-api = "agent_api.main:run"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

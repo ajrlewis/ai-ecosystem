@@ -1,6 +1,6 @@
 # PostgreSQL Preset
 
-Adopted for Brain with pgvector. Canonical Pages, Sources, Skills, and immutable versions must remain valid independently of rebuildable chunk and embedding data.
+Adopted for Knowledge with pgvector. Canonical Pages, Sources, Skills, and immutable versions must remain valid independently of rebuildable chunk and embedding data.
 
 - Treat schema changes as migrations, not ad hoc database edits.
 - Keep constraints, indexes, and transactions aligned with application invariants.

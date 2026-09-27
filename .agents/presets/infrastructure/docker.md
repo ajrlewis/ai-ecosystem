@@ -1,6 +1,6 @@
 # Docker Preset
 
-Adopted for Brain's host-independent service and local PostgreSQL + pgvector dependency. Northstar fixtures must stay synthetic, and container behavior must match direct local execution.
+Adopted for Knowledge's host-independent service and local PostgreSQL + pgvector dependency. Northstar fixtures must stay synthetic, and container behavior must match direct local execution.
 
 - Keep images small, reproducible, and aligned with the repository's runtime choices.
 - Prefer Docker Compose as the single local entrypoint when the application needs supporting services. Include only dependencies required for realistic local development and tests.
